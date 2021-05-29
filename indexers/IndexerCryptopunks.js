@@ -65,7 +65,7 @@ module.exports =  class IndexerERC721 {
     }
 
     static async removeCryptopunkFromAccount( accountAddress ,contractAddress , tokenId ,mongoInterface ){
-        let existingAccount = await mongoInterface.findOne('cryptopunk_balances', {accountAddress: accountAddress, contractAddress: contractAddress }  )
+        let existingAccount = await mongoInterface.findOne('erc721_balances', {accountAddress: accountAddress, contractAddress: contractAddress }  )
 
         if(existingAccount){
             let tokenIdsArray = existingAccount.tokenIds
