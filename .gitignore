@@ -1,0 +1,3 @@
+node_modules
+tests/testconfig.json
+tasks/taskconfig.json
