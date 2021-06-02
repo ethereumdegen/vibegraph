@@ -33,7 +33,7 @@ module.exports =  class IndexerERC721 {
         if(eventName == 'transfer' ){
             let from = web3utils.toChecksumAddress(outputs['0'] )
             let to = web3utils.toChecksumAddress(outputs['1'] )
-            let tokenId =  outputs['2']
+            let tokenId = parseInt(outputs['2'])
 
             await IndexerERC721.removeERC721TokenFromAccount( from ,contractAddress , tokenId  ,mongoInterface )
             await IndexerERC721.addERC721TokenToAccount( to ,contractAddress , tokenId  ,mongoInterface) 
@@ -42,7 +42,7 @@ module.exports =  class IndexerERC721 {
         if(eventName == 'transfersingle' ){
             let from = web3utils.toChecksumAddress(outputs._from )
             let to = web3utils.toChecksumAddress(outputs._to )
-            let tokenId =  outputs._id 
+            let tokenId = parseInt(outputs._id)
 
             await IndexerERC721.removeERC721TokenFromAccount( from ,contractAddress , tokenId  ,mongoInterface )
             await IndexerERC721.addERC721TokenToAccount( to ,contractAddress , tokenId  ,mongoInterface ) 
@@ -51,6 +51,8 @@ module.exports =  class IndexerERC721 {
     }
 
     static async removeERC721TokenFromAccount( accountAddress ,contractAddress , tokenId ,mongoInterface ){
+        tokenId = parseInt(tokenId)
+
         let existingAccount = await mongoInterface.findOne('erc721_balances', {accountAddress: accountAddress, contractAddress: contractAddress }  )
 
         if(existingAccount){
@@ -68,6 +70,8 @@ module.exports =  class IndexerERC721 {
     }
 
     static async addERC721TokenToAccount( accountAddress ,contractAddress , tokenId  ,mongoInterface){
+        tokenId = parseInt(tokenId)
+        
         let existingAccount = await mongoInterface.findOne('erc721_balances', {accountAddress: accountAddress, contractAddress: contractAddress }  )
 
         if(existingAccount){

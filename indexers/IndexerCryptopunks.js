@@ -33,7 +33,7 @@ module.exports =  class IndexerERC721 {
             
             let from = contractAddress
             let to = web3utils.toChecksumAddress(outputs['0'] )
-            let tokenId = outputs['1'] 
+            let tokenId = parseInt(outputs['1'])
             
 
             await IndexerERC721.removeCryptopunkFromAccount( from ,contractAddress , tokenId  ,mongoInterface )
@@ -43,7 +43,7 @@ module.exports =  class IndexerERC721 {
         //event PunkBought(uint indexed punkIndex, uint value, address indexed fromAddress, address indexed toAddress);
        
         if(eventName == 'punkbought' ){
-            let tokenId = outputs['0'] 
+            let tokenId = parseInt(outputs['0'])
             let from = web3utils.toChecksumAddress(outputs['2'] )
             let to = web3utils.toChecksumAddress(outputs['3'] )
             
@@ -56,7 +56,7 @@ module.exports =  class IndexerERC721 {
         if(eventName == 'punktransfer' ){
             let from = web3utils.toChecksumAddress(outputs['0'] )
             let to = web3utils.toChecksumAddress(outputs['1'] )
-            let tokenId =  outputs['2']
+            let tokenId =  parseInt(outputs['2'])
 
             await IndexerERC721.removeCryptopunkFromAccount( from ,contractAddress , tokenId  ,mongoInterface )
             await IndexerERC721.addCryptopunkToAccount( to ,contractAddress , tokenId  ,mongoInterface ) 
@@ -65,6 +65,9 @@ module.exports =  class IndexerERC721 {
     }
 
     static async removeCryptopunkFromAccount( accountAddress ,contractAddress , tokenId ,mongoInterface ){
+
+        tokenId = parseInt(tokenId)
+
         let existingAccount = await mongoInterface.findOne('erc721_balances', {accountAddress: accountAddress, contractAddress: contractAddress }  )
 
         if(existingAccount){
@@ -82,6 +85,8 @@ module.exports =  class IndexerERC721 {
     }
 
     static async addCryptopunkToAccount( accountAddress ,contractAddress , tokenId  ,mongoInterface){
+        tokenId = parseInt(tokenId)
+        
         let existingAccount = await mongoInterface.findOne('erc721_balances', {accountAddress: accountAddress, contractAddress: contractAddress }  )
 
         if(existingAccount){
