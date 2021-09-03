@@ -39,15 +39,24 @@ const IndexerBuyTheFloor = require('./indexers/IndexerBuyTheFloor')
 const IndexerBurnBook = require('./indexers/IndexerBurnBook')
 const IndexerCryptopunks = require('./indexers/IndexerCryptopunks')
 
+var customIndexersArray = []
 
 
+var baseIndexers = [
+    { type:'erc20', abi: ERC20ABI ,  handler: IndexerERC20  },
+    { type:'erc721', abi: ERC721ABI ,  handler: IndexerERC721  },
+    { type:'buythefloor', abi: BUYTHEFLOORABI ,  handler: IndexerERC20  },
+    { type:'burnbook', abi: BURNBOOKABI ,  handler: IndexerBurnBook  },
+    { type:'cryptopunks', abi: CRYPTOPUNKSABI ,  handler: IndexerCryptopunks  },
+]
+/*
 var indexers = {
     'erc721': IndexerERC721,
     'erc20': IndexerERC20,
     'buythefloor': IndexerBuyTheFloor,
     'burnbook': IndexerBurnBook,
     'cryptopunks' : IndexerCryptopunks
-}
+}*/
 
 module.exports =  class Wolfpack {
 
@@ -72,18 +81,44 @@ module.exports =  class Wolfpack {
     }
 
 
+    getIndexerForContractType(contractType){
+        
+        contractType = contractType.toLowerCase()
+
+        
+
+        let allIndexers = baseIndexers.concat( customIndexersArray )
+
+         
+        for(let indexer of allIndexers){
+            if(contractType == indexer.type.toLowerCase()){
+                return indexer.handler
+            }
+        }
+        
+
+        //fallback 
+        return IndexerERC20;
+
+    }
+
+    
      getABIFromType(type){
         type = type.toLowerCase()
 
-        if(type=='erc20') return ERC20ABI;
-        if(type=='erc721') return ERC721ABI;
-        if(type=='buythefloor') return BUYTHEFLOORABI;
-        if(type=='burnbook') return BURNBOOKABI;
-        if(type=='cryptopunks') return CRYPTOPUNKSABI;
 
+        let allIndexers = baseIndexers.concat( customIndexersArray )
 
-
-     return ERC20ABI;
+         
+        for(let indexer of allIndexers){
+            if(type == indexer.type.toLowerCase()){
+                return indexer.abi
+            }
+        }
+        
+ 
+        //fallback 
+        return ERC20ABI;
     }
     
 
@@ -128,7 +163,9 @@ module.exports =  class Wolfpack {
         }
 
        
-
+        if(indexingConfig.customIndexers){
+            customIndexersArray = indexingConfig.customIndexers
+        }
 
         if(!indexingConfig.indexRate){
             indexingConfig.indexRate = 10*1000;
@@ -579,14 +616,7 @@ module.exports =  class Wolfpack {
 
     }
 
-    getIndexerForContractType(contractType){
-        
-        contractType = contractType.toLowerCase()
-
-        return indexers[contractType];
-
-    }
-
+    
 
 
 

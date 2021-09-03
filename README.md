@@ -47,3 +47,13 @@ Data aggregator for Transfer/Approval events of ERC20 and ERC721 tokens
         ERC20 Events:  Transfer, Approval, Deposit (weth), Withdrawal (weth), Mint (0xBTC)
  
         ERC721 Events: Transfer
+
+
+#### Custom Indexers
+
+Specify a custom indexer in the wolfpack config like so:
+
+customIndexers:[{ type:'TellerOptions', abi: TellerOptionsABI ,  handler: IndexerTellerOptions  }]
+
+
+Where 'IndexerTellerOptions' is an imported Class similar to ./indexers/IndexerCryptopunks.js
