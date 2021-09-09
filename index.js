@@ -73,8 +73,14 @@ module.exports =  class Wolfpack {
             mongoOptions.suffix = 'development'
         }
 
+        let dbName = 'wolfpack_'.concat(mongoOptions.suffix)
+
+        if(mongoOptions.dbName){
+            dbName = mongoOptions.dbName
+        }
+
         this.mongoInterface = new MongoInterface( ) 
-        await this.mongoInterface.init( 'wolfpack_'.concat(mongoOptions.suffix) , mongoOptions )
+        await this.mongoInterface.init( dbName , mongoOptions )
 
         
         
