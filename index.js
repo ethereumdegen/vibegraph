@@ -370,6 +370,11 @@ module.exports =  class Wolfpack {
         
         let scaledCourseBlockGap = await this.getScaledCourseBlockGap( contractAddress )
 
+
+        if(!this.maxBlockNumber){
+            console.log('Warning: no maxBlockNumber ' )
+            return 
+        }
        
         if(cIndexingBlock + scaledCourseBlockGap < this.maxBlockNumber){
             
