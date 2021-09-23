@@ -168,6 +168,17 @@ module.exports =  class Wolfpack {
 
         }
 
+        if(indexingConfig.subscribe){
+            for(let contractData of this.contractsArray){
+
+                
+                let contractABI = this.getABIFromType(contractData.type) 
+
+                this.subscribeToEvents( contractData.address, contractABI )
+            }
+           
+        }
+
        
         if(indexingConfig.customIndexers){
             customIndexersArray = indexingConfig.customIndexers
@@ -236,6 +247,74 @@ module.exports =  class Wolfpack {
            console.log('incrementContractsCount',this.currentContractIndex)
         }*/
      
+
+    }
+
+    
+
+    subscribeToEvents( contractAddress, contractABI ){
+
+        const myContract =  new this.web3.eth.Contract( contractABI , contractAddress   )
+        
+         
+        const knownEventTokens = myContract.options.jsonInterface.filter((token) => {
+            return token.type === 'event';
+          });
+ 
+        
+        
+        let options = { 
+            address: contractAddress     //Only get events from specific addresses 
+        };
+
+        console.log('subscribing to logs ', options)
+        
+        let subscription = this.web3.eth.subscribe('logs', options,(err,event) => {
+            if (err) console.error(err)
+             
+        });
+
+       
+        subscription.on('data', async (rawEvent) =>  {
+
+            
+ 
+            let matchingEventToken = null
+
+            for(let eventToken of knownEventTokens){
+                if( rawEvent.topics[0] ==  eventToken.signature ){
+                    matchingEventToken = eventToken 
+                    break 
+                }
+            }
+
+            if(matchingEventToken){
+
+                const outputs = this.web3.eth.abi.decodeLog(
+                    matchingEventToken.inputs,
+                    rawEvent.data,
+                    rawEvent.topics.slice(1)
+                  ) 
+    
+                 
+
+                 rawEvent.event = matchingEventToken.name 
+                 rawEvent.returnValues = outputs 
+    
+                 let inserted = await this.mongoInterface.insertOne('event_list', rawEvent)   
+               
+                console.log('inserted new event', rawEvent , inserted )
+
+            }else{
+                console.log( 'no match found for ', rawEvent) 
+            }
+
+            
+        } )
+
+        subscription.on('changed', changed => console.log(changed))
+        subscription.on('error', err => { throw err })
+        subscription.on('connected', nr => console.log(nr)) 
 
     }
 
@@ -619,10 +698,15 @@ module.exports =  class Wolfpack {
             return {success:true } 
         }
 
+        try{ 
+            let result = await indexer.modifyLedgerByEvent(event,mongoInterface)
 
-        let result = await indexer.modifyLedgerByEvent(event,mongoInterface)
-
-        return {success:true, result: result} 
+            return {success:true, result: result} 
+        }catch(e){
+            console.error(e)
+            return {success:false } 
+        }
+      
         
 
     }
