@@ -23,7 +23,8 @@ Data aggregator for Transfer/Approval events of ERC20 and ERC721 tokens
             indexRate: 10*1000,
             courseBlockGap: 8000,
             logging:true,
-            reScale: false
+            reScale: false,
+            subscribe: false
         }
 
         let wolfPack = new WolfPack()
@@ -57,3 +58,8 @@ customIndexers:[{ type:'TellerOptions', abi: TellerOptionsABI ,  handler: Indexe
 
 
 Where 'IndexerTellerOptions' is an imported Class similar to ./indexers/IndexerCryptopunks.js
+
+
+#### Subscription
+
+If you set subscribe:true, then the indexer will poll and subscribe to new events to capture them faster.  You MUST use a websockets-based connection and not an http based connection for the web3 RPC.  
