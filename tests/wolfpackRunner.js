@@ -21,6 +21,7 @@ let web3Config = require('./testconfig.json')
             suffix:"dev",
             indexRate: 10*1000,
             courseBlockGap: 8000,
+            fineBlockGap: 20,
             logging:true,
             reScale: false,
             subscribe: true

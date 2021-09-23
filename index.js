@@ -634,7 +634,11 @@ module.exports =  class Wolfpack {
                         let eventsToLog = results.events.filter(evt => ( evt.event != null )  )
 
                         if(eventsToLog && eventsToLog.length > 0 ){
-                            insertedMany = await this.mongoInterface.insertMany('event_list', eventsToLog /* results.events*/  )
+                            try{ 
+                                 insertedMany = await this.mongoInterface.insertMany('event_list', eventsToLog /* results.events*/  )
+                            }catch(e){
+                                console.error(e)
+                            }
                         }
 
                         
