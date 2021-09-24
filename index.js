@@ -189,7 +189,7 @@ module.exports =  class Wolfpack {
             indexingConfig.indexRate = 10*1000;
         }
 
-        if(indexingConfig.callback){
+        if(indexingConfig.onIndexCallback){
            onIndexCallback = indexingConfig.onIndexCallback
         }
 
