@@ -354,7 +354,7 @@ module.exports =  class Wolfpack {
             await this.mongoInterface.updateOne('event_list', {_id: event._id }, {hasAffectedLedger: true })
         }
 
-        if(onIndexCallback){
+        if(onIndexCallback && newEventsArray && newEventsArray.length > 0){
             onIndexCallback()
         }
 
