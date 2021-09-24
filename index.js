@@ -41,6 +41,7 @@ const IndexerCryptopunks = require('./indexers/IndexerCryptopunks')
 
 var customIndexersArray = []
 
+var onIndexCallback; 
 
 var baseIndexers = [
     { type:'erc20', abi: ERC20ABI ,  handler: IndexerERC20  },
@@ -188,6 +189,10 @@ module.exports =  class Wolfpack {
             indexingConfig.indexRate = 10*1000;
         }
 
+        if(indexingConfig.callback){
+           onIndexCallback = indexingConfig.onIndexCallback
+        }
+
         if(!indexingConfig.updateBlockNumberRate){
             indexingConfig.updateBlockNumberRate = 60*1000;
         }
@@ -304,6 +309,7 @@ module.exports =  class Wolfpack {
                  let inserted = await this.mongoInterface.insertOne('event_list', rawEvent)   
                
                 console.log('inserted new event', rawEvent , inserted )
+ 
 
             }else{
                 console.log( 'no match found for ', rawEvent) 
@@ -348,7 +354,9 @@ module.exports =  class Wolfpack {
             await this.mongoInterface.updateOne('event_list', {_id: event._id }, {hasAffectedLedger: true })
         }
 
-
+        if(onIndexCallback){
+            onIndexCallback()
+        }
 
         this.ledgerContractIndex = this.ledgerContractIndex +1
         if(this.ledgerContractIndex >= this.contractsArray.length){
@@ -643,6 +651,8 @@ module.exports =  class Wolfpack {
 
                         
                     }
+
+ 
                     
                 } 
 
