@@ -320,9 +320,11 @@ module.exports =  class Wolfpack {
                  rawEvent.returnValues = outputs 
     
                  let inserted = await this.mongoInterface.insertOne('event_list', rawEvent)   
-               
-                console.log('inserted new event', rawEvent , inserted )
- 
+                    
+                 if(debug){
+                    console.log('inserted new event', rawEvent , inserted ) 
+                 }
+                
 
             }else{
                 console.log( 'no match found for ', rawEvent) 
