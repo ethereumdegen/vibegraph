@@ -1,6 +1,6 @@
 {
   "name": "wolfpack",
-  "version": "0.26.2",
+  "version": "0.26.3",
   "description": "Advanced data aggregation node for Ethereum",
   "main": "index.js",
   "scripts": {

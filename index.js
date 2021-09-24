@@ -43,6 +43,8 @@ var customIndexersArray = []
 
 var onIndexCallback; 
 
+var debug = false;
+
 var baseIndexers = [
     { type:'erc20', abi: ERC20ABI ,  handler: IndexerERC20  },
     { type:'erc721', abi: ERC721ABI ,  handler: IndexerERC721  },
@@ -189,6 +191,10 @@ module.exports =  class Wolfpack {
             indexingConfig.indexRate = 10*1000;
         }
 
+        if(indexingConfig.debug){
+            debug = true 
+        }
+
         if(indexingConfig.onIndexCallback){
            onIndexCallback = indexingConfig.onIndexCallback
         }
@@ -285,6 +291,11 @@ module.exports =  class Wolfpack {
             
  
             let matchingEventToken = null
+
+
+            if(debug){
+                console.log(' knownEventTokens  ', knownEventTokens)
+            }
 
             for(let eventToken of knownEventTokens){
                 if( rawEvent.topics[0] ==  eventToken.signature ){
