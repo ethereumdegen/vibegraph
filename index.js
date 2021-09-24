@@ -105,7 +105,7 @@ module.exports =  class Wolfpack {
             }
         }
         
-
+        console.error('WARNING: falling back to IndexerERC20')
         //fallback 
         return IndexerERC20;
 
@@ -127,6 +127,7 @@ module.exports =  class Wolfpack {
         
  
         //fallback 
+        console.error('WARNING: falling back to ERC20ABI')
         return ERC20ABI;
     }
     
@@ -171,16 +172,7 @@ module.exports =  class Wolfpack {
 
         }
 
-        if(indexingConfig.subscribe){
-            for(let contractData of this.contractsArray){
-
-                
-                let contractABI = this.getABIFromType(contractData.type) 
-
-                this.subscribeToEvents( contractData.address, contractABI )
-            }
-           
-        }
+       
 
        
         if(indexingConfig.customIndexers){
@@ -217,6 +209,16 @@ module.exports =  class Wolfpack {
             SAFE_EVENT_COUNT = parseInt(indexingConfig.safeEventCount)
         }
 
+        if(indexingConfig.subscribe){
+            for(let contractData of this.contractsArray){
+
+                
+                let contractABI = this.getABIFromType(contractData.type) 
+
+                this.subscribeToEvents( contractData.address, contractABI )
+            }
+           
+        }
     
 
         //this.currentEventFilterBlock = indexingConfig.startBlock;
