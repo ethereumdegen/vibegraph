@@ -36,6 +36,6 @@ let web3Config = require('./testconfig.json')
     } 
 
 
-    runWolfPack()
+    runVibeGraph()
   
     
