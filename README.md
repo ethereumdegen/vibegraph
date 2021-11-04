@@ -1,4 +1,4 @@
-# 🦊 VibeGraph 🦊
+# 🐸VibeGraph🐸
 Data collection bot for Web3 events such as Transfer/Approval events of ERC20 and ERC721 tokens.  Similar to subgraph but opensource and lightweight.
 
 !VIBE
