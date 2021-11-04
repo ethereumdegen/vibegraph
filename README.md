@@ -4,7 +4,11 @@ Data collection bot for Web3 events such as Transfer/Approval events of ERC20 an
 !VIBE
 
 
- 
+#### Try it out 
+
+npm install
+
+npm run testrun 
  
 
 #### How to use (In NodeJS) 
