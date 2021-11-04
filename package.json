@@ -1,6 +1,6 @@
 {
   "name": "vibegraph",
-  "version": "0.28.0",
+  "version": "0.28.1",
   "description": "Web3 data collection bot that saves events to MongoDB by synchonizing relevant chaindata",
   "main": "index.js",
   "scripts": {
@@ -11,6 +11,10 @@
   "keywords": [
     "ethereum"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/admazzola/vibegraph.git"
+},
   "author": "admazzola",
   "license": "MIT",
   "dependencies": {
