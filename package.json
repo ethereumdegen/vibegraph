@@ -1,11 +1,11 @@
 {
-  "name": "wolfpack",
-  "version": "0.26.5",
-  "description": "Advanced data aggregation node for Ethereum",
+  "name": "vibegraph",
+  "version": "0.27.0",
+  "description": "Web3 data collection bot that saves events to MongoDB by synchonizing relevant chaindata",
   "main": "index.js",
   "scripts": {
     "test": "mocha tests/mocha.js",
-    "testrun": "node tests/wolfpackRunner.js",
+    "testrun": "node tests/vibeRunner.js",
     "deleteIndexedData": "node tasks/deleteIndexedData.js"
   },
   "keywords": [

@@ -61,7 +61,7 @@ var indexers = {
     'cryptopunks' : IndexerCryptopunks
 }*/
 
-module.exports =  class Wolfpack {
+module.exports =  class VibeGraph {
 
     constructor(  )
     {
@@ -76,7 +76,7 @@ module.exports =  class Wolfpack {
             mongoOptions.suffix = 'development'
         }
 
-        let dbName = 'wolfpack_'.concat(mongoOptions.suffix)
+        let dbName = 'vibegraph_'.concat(mongoOptions.suffix)
 
         if(mongoOptions.dbName){
             dbName = mongoOptions.dbName
@@ -231,7 +231,7 @@ module.exports =  class Wolfpack {
         this.updateLedger(  )
 
         if(this.maxBlockNumber == null){
-            console.error('Wolfpack cannot fetch the blocknumber: Stopping Process')
+            console.error('Cannot fetch the blocknumber: Stopping Process')
             return 
         }
         
