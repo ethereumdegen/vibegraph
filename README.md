@@ -64,3 +64,9 @@ Where 'IndexerTellerOptions' is an imported Class similar to ./indexers/IndexerC
 #### Subscription
 
 If you set subscribe:true, then the indexer will poll and subscribe to new events to capture them faster.  You MUST use a websockets-based connection and not an http based connection for the web3 RPC.  
+
+
+
+## How you can contribute to this repo
+
+- add more tests bc im too busy :D 
