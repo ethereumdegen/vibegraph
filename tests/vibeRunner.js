@@ -18,7 +18,7 @@ let web3Config = require('./testconfig.json')
               
                     ],
              
-            suffix:"dev",
+            dbName:"vibegraph_dev",
             indexRate: 10*1000,
             courseBlockGap: 8000,
             fineBlockGap: 20,
@@ -28,7 +28,7 @@ let web3Config = require('./testconfig.json')
         }
 
         let wolfPack = new WolfPack()
-        await wolfPack.init( {suffix: wolfPackConfig.suffix} )
+        await wolfPack.init( wolfPackConfig )
         wolfPack.startIndexing( web3, wolfPackConfig )  
 
         
