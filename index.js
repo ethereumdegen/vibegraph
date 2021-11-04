@@ -24,20 +24,14 @@ let envmode = process.env.NODE_ENV
 
 */
 let ERC721ABI = require( './config/contracts/SuperERC721ABI.json' )
-let ERC20ABI = require( './config/contracts/SuperERC20ABI.json' )
-let BUYTHEFLOORABI = require( './config/contracts/BuyTheFloor.json' )
-let BURNBOOKABI = require( './config/contracts/BurnBook.json' )
-let CRYPTOPUNKSABI = require( './config/contracts/Cryptopunks.json' )
+let ERC20ABI = require( './config/contracts/SuperERC20ABI.json' ) 
 
 var SAFE_EVENT_COUNT = 7000
 var LOW_EVENT_COUNT = 1500
 
 
 const IndexerERC721 = require('./indexers/IndexerERC721')
-const IndexerERC20 = require('./indexers/IndexerERC20') 
-const IndexerBuyTheFloor = require('./indexers/IndexerBuyTheFloor')
-const IndexerBurnBook = require('./indexers/IndexerBurnBook')
-const IndexerCryptopunks = require('./indexers/IndexerCryptopunks')
+const IndexerERC20 = require('./indexers/IndexerERC20')  
 
 var customIndexersArray = []
 
@@ -47,18 +41,12 @@ var debug = false;
 
 var baseIndexers = [
     { type:'erc20', abi: ERC20ABI ,  handler: IndexerERC20  },
-    { type:'erc721', abi: ERC721ABI ,  handler: IndexerERC721  },
-    { type:'buythefloor', abi: BUYTHEFLOORABI ,  handler: IndexerERC20  },
-    { type:'burnbook', abi: BURNBOOKABI ,  handler: IndexerBurnBook  },
-    { type:'cryptopunks', abi: CRYPTOPUNKSABI ,  handler: IndexerCryptopunks  },
+    { type:'erc721', abi: ERC721ABI ,  handler: IndexerERC721  } 
 ]
 /*
 var indexers = {
     'erc721': IndexerERC721,
-    'erc20': IndexerERC20,
-    'buythefloor': IndexerBuyTheFloor,
-    'burnbook': IndexerBurnBook,
-    'cryptopunks' : IndexerCryptopunks
+    'erc20': IndexerERC20 
 }*/
 
 module.exports =  class VibeGraph {
