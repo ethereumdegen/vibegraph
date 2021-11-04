@@ -24,7 +24,6 @@ npm run testrun
             indexRate: 10*1000,
             courseBlockGap: 8000,
             logging:true,
-            reScale: false,
             subscribe: false
         }
 
