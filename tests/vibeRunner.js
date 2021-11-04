@@ -1,17 +1,17 @@
  
-var WolfPack = require('../index.js')
+var VibeGraph = require('../index.js')
 
 var Web3 = require('web3')
 
 let web3Config = require('./testconfig.json')
 
 
- async function runWolfPack(){
+ async function runVibeGraph(){
         let web3 = new Web3( web3Config.web3provider  )
 
 
        
-        let wolfPackConfig = {
+        let vibegraphConfig = {
             contracts:[
                              //goerli 
                     {address:"0x8a4c85478568ec5284301eaa0ddfd06c0ed73323", startBlock: 4876534 , type:"Cryptopunks"} 
@@ -27,9 +27,9 @@ let web3Config = require('./testconfig.json')
             subscribe: true
         }
 
-        let wolfPack = new WolfPack()
-        await wolfPack.init( wolfPackConfig )
-        wolfPack.startIndexing( web3, wolfPackConfig )  
+        let vibegraph = new VibeGraph()
+        await vibegraph.init( vibegraphConfig )
+        vibegraph.startIndexing( web3, vibegraphConfig )  
 
         
 

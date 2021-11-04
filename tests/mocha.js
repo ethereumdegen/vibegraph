@@ -16,7 +16,7 @@ describe("Vibegraph Data Collector", function() {
         let vibegraphConfig = {
             contractAddress:"0xab89a7742cb10e7bce98540fd05c7d731839cf9f",
             startBlock:1316824,
-            dbName:"vibegraph__test",
+            dbName:"vibegraph_test",
             contractType: 'ERC20', 
              courseBlockGap: 10000,
              logging:true,

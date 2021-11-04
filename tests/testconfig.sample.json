@@ -1,4 +1,4 @@
 {
-    "web3provider":"https://..."
+    "web3provider":"wss://goerli.infura.io/ws/v3/"
 
 }
