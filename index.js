@@ -25,11 +25,13 @@ let envmode = process.env.NODE_ENV
 */
 let ERC721ABI = require( './config/contracts/SuperERC721ABI.json' )
 let ERC20ABI = require( './config/contracts/SuperERC20ABI.json' ) 
+let ERC1155ABI = require( './config/contracts/SuperERC1155ABI.json' )
 
 var SAFE_EVENT_COUNT = 7000
 var LOW_EVENT_COUNT = 1500
 
 
+const IndexerERC1155 = require('./indexers/IndexerERC1155')
 const IndexerERC721 = require('./indexers/IndexerERC721')
 const IndexerERC20 = require('./indexers/IndexerERC20')  
 
@@ -41,7 +43,8 @@ var debug = false;
 
 var baseIndexers = [
     { type:'erc20', abi: ERC20ABI ,  handler: IndexerERC20  },
-    { type:'erc721', abi: ERC721ABI ,  handler: IndexerERC721  } 
+    { type:'erc721', abi: ERC721ABI ,  handler: IndexerERC721  },
+    { type:'erc1155', abi: ERC721ABI ,  handler: IndexerERC1155  } 
 ]
 /*
 var indexers = {
@@ -333,10 +336,7 @@ module.exports =  class VibeGraph {
         let contractAddress =  contractData.address 
 
         let contractType = await this.readParameterForContract(contractAddress, 'type')
-
-       
-
-        //let usingERC721 = (contractType.toLowerCase() == 'erc721')
+ 
 
         let newEventsArray = await this.mongoInterface.findAllWithLimit('event_list',{address: contractAddress, hasAffectedLedger: null }, 5000)
 
@@ -348,12 +348,7 @@ module.exports =  class VibeGraph {
 
             let modify = await this.modifyLedgerForEventType(event, contractType)
 
-            /*if(  usingERC721  ){  
-                await this.modifyERC721LedgerByEvent( event )
-            }else{ 
-                await this.modifyERC20LedgerByEvent( event )
-            }  */
-
+            
             await this.mongoInterface.updateOne('event_list', {_id: event._id }, {hasAffectedLedger: true })
         }
 
@@ -401,6 +396,7 @@ module.exports =  class VibeGraph {
         await this.mongoInterface.deleteMany('erc20_approval' )
         await this.mongoInterface.deleteMany('erc20_transferred' )
         await this.mongoInterface.deleteMany('erc721_balances' )
+        await this.mongoInterface.deleteMany('erc1155_balances' )
         await this.mongoInterface.deleteMany('erc20_burned' )
         await this.mongoInterface.deleteMany('offchain_signatures' )
         await this.mongoInterface.deleteMany('nft_sale' )
@@ -472,12 +468,6 @@ module.exports =  class VibeGraph {
             await this.indexContractData( contractAddress, contractABI, cIndexingBlock, scaledCourseBlockGap  )
             
             
-            /*if(contractType.toLowerCase() == 'erc721'){
-                await this.indexERC721Data(contractAddress,cIndexingBlock, scaledCourseBlockGap )
-            }else{
-                await this.indexERC20Data(contractAddress,cIndexingBlock, scaledCourseBlockGap )
-            }*/
-    
     
              await this.setParameterForContract(contractAddress, 'synced', false)
              await this.setParameterForContract(contractAddress, 'lastUpdated', Date.now())
@@ -492,11 +482,7 @@ module.exports =  class VibeGraph {
             let contractABI = this.getABIFromType(contractType) 
             await this.indexContractData( contractAddress, contractABI, cIndexingBlock, remainingBlockGap  )
          
-           /* if(contractType.toLowerCase() == 'erc721'){
-                await this.indexERC721Data(contractAddress,cIndexingBlock, remainingBlockGap )
-            }else{
-                await this.indexERC20Data(contractAddress,cIndexingBlock,  remainingBlockGap  )
-            } */
+          
 
             await this.setParameterForContract(contractAddress, 'synced', true)
             await this.setParameterForContract(contractAddress, 'lastUpdated', Date.now())

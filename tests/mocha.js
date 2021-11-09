@@ -31,7 +31,7 @@ describe("Vibegraph Data Collector", function() {
 
         let vibegraph = new VibeGraph()
         await vibegraph.init( vibegraphConfig )
-        vibegraph.startIndexing( web3, vibegraphConfig )  
+        //vibegraph.startIndexing( web3, vibegraphConfig )  
 
         
 

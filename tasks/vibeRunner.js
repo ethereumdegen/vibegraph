@@ -3,7 +3,7 @@ var VibeGraph = require('../index.js')
 
 var Web3 = require('web3')
 
-let web3Config = require('./testconfig.json')
+let web3Config = require('../tests/testconfig.json')
 
 let CryptopunksABI = require( '../config/contracts/Cryptopunks.json' )
 const IndexerCryptopunks = require('../indexers/IndexerCryptopunks')
