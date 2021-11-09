@@ -48,6 +48,8 @@ npm run testrun
         ERC20 Events:  Transfer, Approval, Deposit (weth), Withdrawal (weth), Mint (0xBTC)
  
         ERC721 Events: Transfer
+        
+        ERC1155 Events: Transfer
 
 
 #### Custom Indexers
