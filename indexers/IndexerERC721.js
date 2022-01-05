@@ -63,9 +63,9 @@ module.exports =  class IndexerERC721 {
                 tokenIdsArray.splice(index, 1);
             }
 
-            await mongoInterface.updateOne('erc721_balances', {accountAddress: accountAddress, contractAddress: contractAddress}, {tokenIds: tokenIdsArray} )
+            await mongoInterface.updateOne('erc721_balances', {accountAddress: accountAddress, contractAddress: contractAddress}, {tokenIds: tokenIdsArray, lastUpdatedAt: Date.now() } )
         }else{
-            await mongoInterface.insertOne('erc721_balances', {accountAddress: accountAddress, contractAddress: contractAddress, tokenIds: [] }   )
+            await mongoInterface.insertOne('erc721_balances', {accountAddress: accountAddress, contractAddress: contractAddress, tokenIds: [] , lastUpdatedAt: Date.now() }   )
         }
     }
 
@@ -79,9 +79,9 @@ module.exports =  class IndexerERC721 {
 
             tokenIdsArray.push(tokenId)
 
-            await mongoInterface.updateOne('erc721_balances', {accountAddress: accountAddress, contractAddress: contractAddress}, {tokenIds: tokenIdsArray} )
+            await mongoInterface.updateOne('erc721_balances', {accountAddress: accountAddress, contractAddress: contractAddress}, {tokenIds: tokenIdsArray , lastUpdatedAt: Date.now()  } )
         }else{
-            await mongoInterface.insertOne('erc721_balances', {accountAddress: accountAddress, contractAddress: contractAddress, tokenIds: [tokenId] }   )
+            await mongoInterface.insertOne('erc721_balances', {accountAddress: accountAddress, contractAddress: contractAddress, tokenIds: [tokenId] , lastUpdatedAt: Date.now()  }   )
         }
     }
 
