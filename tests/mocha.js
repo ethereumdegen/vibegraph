@@ -9,9 +9,11 @@ let web3Config = require('./testconfig.json')
 
 describe("Vibegraph Data Collector", function() {
  
-    it("starts vibegraph", async function() {
+    it("starts vibegraph and does setup callback", async function() {
         
         let web3 = new Web3( web3Config.web3provider  )
+
+        let hasDoneSetup = false
 
         let vibegraphConfig = {
             contracts:[{
@@ -27,6 +29,11 @@ describe("Vibegraph Data Collector", function() {
             courseBlockGap: 8000,
             fineBlockGap: 20,
             logging:true,
+            databaseSetupCallback: function(mongointerface){
+                console.log('doing db setup, ',mongointerface)
+
+                hasDoneSetup = true
+            }
         }
 
         let vibegraph = new VibeGraph()
@@ -34,7 +41,7 @@ describe("Vibegraph Data Collector", function() {
         //vibegraph.startIndexing( web3, vibegraphConfig )  
 
         
-
+        expect(hasDoneSetup).to.eql(true)
     });
   
    

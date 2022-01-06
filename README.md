@@ -4,6 +4,11 @@ Data collection bot for Web3 events such as Transfer/Approval events of ERC20 an
 !VIBE
 
 
+## TODO 
+add database setup callback 
+test new 721 indexer (upgrade) 
+
+
 #### Try it out 
 
 npm install

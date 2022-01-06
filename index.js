@@ -76,6 +76,10 @@ module.exports =  class VibeGraph {
         this.mongoInterface = new MongoInterface( ) 
         await this.mongoInterface.init( dbName , mongoOptions )
 
+        if(mongoOptions.databaseSetupCallback 
+        && typeof mongoOptions.databaseSetupCallback == "function"){
+            await mongoOptions.databaseSetupCallback(this.mongoInterface)
+        }
         
         
     }

@@ -35,6 +35,8 @@ module.exports =  class IndexerERC721 {
             let to = web3utils.toChecksumAddress(outputs['1'] )
             let tokenId = parseInt(outputs['2'])
 
+            await IndexerERC721.setOwnerOfERC721Token( to ,contractAddress , tokenId  ,mongoInterface) 
+
             await IndexerERC721.removeERC721TokenFromAccount( from ,contractAddress , tokenId  ,mongoInterface )
             await IndexerERC721.addERC721TokenToAccount( to ,contractAddress , tokenId  ,mongoInterface) 
         }
@@ -44,6 +46,8 @@ module.exports =  class IndexerERC721 {
             let to = web3utils.toChecksumAddress(outputs._to )
             let tokenId = parseInt(outputs._id)
 
+            await IndexerERC721.setOwnerOfERC721Token( to ,contractAddress , tokenId  ,mongoInterface) 
+            
             await IndexerERC721.removeERC721TokenFromAccount( from ,contractAddress , tokenId  ,mongoInterface )
             await IndexerERC721.addERC721TokenToAccount( to ,contractAddress , tokenId  ,mongoInterface ) 
         }
@@ -77,7 +81,9 @@ module.exports =  class IndexerERC721 {
         if(existingAccount){
             let tokenIdsArray = existingAccount.tokenIds
 
-            tokenIdsArray.push(tokenId)
+            if(!tokenIdsArray.includes(tokenId)){
+                tokenIdsArray.push(tokenId)
+            }  
 
             await mongoInterface.updateOne('erc721_balances', {accountAddress: accountAddress, contractAddress: contractAddress}, {tokenIds: tokenIdsArray , lastUpdatedAt: Date.now()  } )
         }else{
@@ -86,6 +92,26 @@ module.exports =  class IndexerERC721 {
     }
 
 
+
+    static async setOwnerOfERC721Token( accountAddress ,contractAddress , tokenId  ,mongoInterface){
+        tokenId = parseInt(tokenId)
+       
+        let existingEntry = await mongoInterface.findOne('erc721_token', {tokenId: tokenId, contractAddress: contractAddress }  )
+
+        if(existingEntry){ 
+            await mongoInterface.updateOne('erc721_token', {tokenId: tokenId, contractAddress: contractAddress}, {accountAddress: accountAddress , lastUpdatedAt: Date.now()  } )
+        }else{
+            await mongoInterface.insertOne('erc721_token', {tokenId: tokenId, contractAddress: contractAddress, accountAddress: accountAddress , lastUpdatedAt: Date.now()  }   )
+        }
+       
+        /*let upsert = await mongoInterface.updateMany('erc721_token', 
+        {tokenId: tokenId, contractAddress: contractAddress },
+        {$set: {tokenId: tokenId, contractAddress: contractAddress, ownerAddress: accountAddress , lastUpdatedAt: Date.now() } }, 
+        {upsert:true } )
+        
+        console.log('upserting', upsert) */
+     
+    }
 
 
 }
