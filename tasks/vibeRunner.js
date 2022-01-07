@@ -16,10 +16,11 @@ const IndexerCryptopunks = require('../indexers/IndexerCryptopunks')
        
         let vibegraphConfig = {
             contracts:[
-                             //goerli 
-                    {address:"0x8a4c85478568ec5284301eaa0ddfd06c0ed73323", 
-                    startBlock: 4876534,
-                     type:"Cryptopunks"
+                             //rinkeby 
+                   
+                    {address:"0x70BC4cCb9bC9eF1B7E9dc465a38EEbc5d73740FB", 
+                    startBlock: 9228750,
+                     type:"ERC721"
                     } 
               
                     ],
