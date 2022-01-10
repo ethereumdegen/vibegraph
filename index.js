@@ -205,13 +205,10 @@ module.exports =  class VibeGraph {
         }
 
         if(indexingConfig.subscribe){
-            for(let contractData of this.contractsArray){
+            
 
-                
-                let contractABI = this.getABIFromType(contractData.type) 
 
-                this.subscribeToEvents( contractData.address, contractABI )
-            }
+            this.subscribeToEvents( this.contractsArray )
            
         }
     
@@ -260,19 +257,34 @@ module.exports =  class VibeGraph {
 
     
 
-    subscribeToEvents( contractAddress, contractABI ){
+    subscribeToEvents(  contractsArray /* contractAddress, contractABI*/ ){
 
-        const myContract =  new this.web3.eth.Contract( contractABI , contractAddress   )
         
+
+        let knownEventTokens = []
+
+        for(let contractData of contractsArray){ 
+
+            let contractABI = this.getABIFromType(contractData.type) 
+            let contractAddress = contractData.address
+
+            let myContract =  new this.web3.eth.Contract( contractABI , contractAddress   )
+
+            let contractEventTokens = myContract.options.jsonInterface.filter((token) => {
+                return token.type === 'event';
+              });
+            
+            knownEventTokens = knownEventTokens.concat(contractEventTokens)
+
+            //this.subscribeToEvents( contractData.address, contractABI )
+        }
          
-        const knownEventTokens = myContract.options.jsonInterface.filter((token) => {
-            return token.type === 'event';
-          });
- 
+      
+        let contractAddresses = contractsArray.map(contract => contract.address)
         
         
         let options = { 
-            address: contractAddress     //Only get events from specific addresses 
+            address: contractAddresses     //Only get events from specific addresses 
         };
 
         console.log('subscribing to logs ', options)
@@ -285,8 +297,7 @@ module.exports =  class VibeGraph {
        
         subscription.on('data', async (rawEvent) =>  {
 
-            
- 
+             
             let matchingEventToken = null
 
 
@@ -303,16 +314,18 @@ module.exports =  class VibeGraph {
 
             if(matchingEventToken){
 
+               
                 const outputs = this.web3.eth.abi.decodeLog(
                     matchingEventToken.inputs,
                     rawEvent.data,
                     rawEvent.topics.slice(1)
                   ) 
-    
-                 
+     
 
                  rawEvent.event = matchingEventToken.name 
                  rawEvent.returnValues = outputs 
+
+                 
     
                  let inserted = await this.mongoInterface.insertOne('event_list', rawEvent)   
                     
