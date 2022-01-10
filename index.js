@@ -649,7 +649,8 @@ module.exports =  class VibeGraph {
 
                         if(eventsToLog && eventsToLog.length > 0 ){
                             try{ 
-                                 insertedMany = await this.mongoInterface.insertMany('event_list', eventsToLog /* results.events*/  )
+                                let options = {ordered: false}
+                                 insertedMany = await this.mongoInterface.insertMany('event_list', eventsToLog /* results.events*/, options  )
                             }catch(e){
                                 console.error(e)
                             }
