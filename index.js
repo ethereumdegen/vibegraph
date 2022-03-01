@@ -645,6 +645,8 @@ module.exports =  class VibeGraph {
                     //our unique index ensures that we will not double count these 
                     if(results.events && results.events.length > 0){
 
+                        
+
                         let eventsToLog = results.events.filter(evt => ( evt.event != null )  )
 
                         if(eventsToLog && eventsToLog.length > 0 ){
@@ -655,6 +657,12 @@ module.exports =  class VibeGraph {
                                 console.error(e)
                             }
                         }
+
+                        let erroredEvents = results.events.filter(evt => ( evt.event == null )  )
+                        if(erroredEvents && erroredEvents.length >0){
+                            console.log('Could not insert events: ', JSON.stringify(erroredEvents))
+                        }
+
 
                         
                     }
