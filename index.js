@@ -658,7 +658,7 @@ module.exports =  class VibeGraph {
                             }
                         }
 
-                        let erroredEvents = results.events.filter(evt => ( evt.event == null )  )
+                        let erroredEvents = results.events.filter(evt => ( !evt.event )  )
                         if(erroredEvents && erroredEvents.length >0){
                             console.log('Could not insert events: ', JSON.stringify(erroredEvents))
                         }
