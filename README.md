@@ -54,7 +54,9 @@ Data collection bot for Web3 events such as Transfer/Approval events of ERC20 an
  
  "indexRate": The number of milliseconds in between requests to the web3 connection for scraping data
  
- "courseBlockGap": The number of blocks to space event collection.  The smaller the number, the less bandwidth will be used to scrape chaindata but the longer it will take to fully synchronize.
+ "courseBlockGap": The number of blocks to space event collection before synchronization.  The smaller the number, the less bandwidth will be used to scrape chaindata but the longer it will take to fully synchronize.
+ 
+ "fineBlockGap": The number of blocks to space event collection after synchronization. This is only used to keep in sync with the head of the chain.  
  
  "logging": A boolean for additional console logging output
  
