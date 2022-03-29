@@ -4,10 +4,6 @@ Data collection bot for Web3 events such as Transfer/Approval events of ERC20 an
 !VIBE
 
 
-## TODO 
-add database setup callback 
-test new 721 indexer (upgrade) 
-
 
 #### Try it out 
 
@@ -17,7 +13,7 @@ npm run testrun
  
 
 #### How to use (In NodeJS) 
-(Requires a MongoDB to be installed on the local machine) 
+(Requires MongoDB to be installed on the local machine) 
 
          let web3 = new Web3( web3Config.web3provider  )
 
@@ -75,4 +71,4 @@ If you set subscribe:true, then the indexer will poll and subscribe to new event
 
 ## How you can contribute to this repo
 
-- add more tests bc im too busy :D 
+- add more unit tests
