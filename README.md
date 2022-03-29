@@ -7,10 +7,11 @@ Data collection bot for Web3 events such as Transfer/Approval events of ERC20 an
 
 #### Try it out 
 
-npm install
 
-npm run testrun 
- 
+    npm install
+
+    npm run testrun 
+
 
 #### How to use (In NodeJS) 
 (Requires MongoDB to be installed on the local machine) 
@@ -57,8 +58,7 @@ npm run testrun
 
 Specify a custom indexer in the vibegraph config like so:
 
-customIndexers:[{ type:'TellerOptions', abi: TellerOptionsABI ,  handler: IndexerTellerOptions  }]
-
+    customIndexers:[{ type:'TellerOptions', abi: TellerOptionsABI ,  handler: IndexerTellerOptions  }]
 
 Where 'IndexerTellerOptions' is an imported Class similar to ./indexers/IndexerCryptopunks.js
 
