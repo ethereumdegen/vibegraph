@@ -13,8 +13,13 @@ Data collection bot for Web3 events such as Transfer/Approval events of ERC20 an
     npm run testrun 
 
 
+
+#### Pre-requisites
+ - NodeJS >= 14
+ - MongoDB
+
 #### How to use (In NodeJS) 
-(Requires MongoDB to be installed on the local machine) 
+
 
          let web3 = new Web3( web3Config.web3provider  )
 
@@ -60,7 +65,7 @@ Data collection bot for Web3 events such as Transfer/Approval events of ERC20 an
  
  "logging": A boolean for additional console logging output
  
- "subscribe":  A boolen to turn on chain data scraping with a subscription to the web3 connection.  With this set to 'true', data is still also scraped using the indexRate and any duplicate events are simply ignored.
+ "subscribe":  A boolen to turn on chain data scraping with a subscription to the web3 connection.  With this set to 'true', data is still also scraped using the indexRate and any duplicate events are simply ignored. You MUST use a websockets-based connection (wss://) and not an http:// based connection for the web3 RPC if you choose to enable this.  
  
  "customIndexers":  An array of objects, each with 'type', 'abi', and 'handler'.  If one of your contracts has a 'type' that is not one of the default types ('ERC20' or 'ERC721') then you must declare the custom type here.  In this way, you attach the ABI object (parsed json file) and the handler (a javascript class describing how to store the event data in mongodb.)  There are example handler files to start from. 
  
@@ -81,11 +86,20 @@ Specify a custom indexer in the vibegraph config like so:
 
 Where 'IndexerTellerOptions' is an imported Class similar to ./indexers/IndexerCryptopunks.js, TellerOptionsABI is a parsed JSON object and the type string is the identifier.  
 
-#### Subscription
-
-If you set subscribe:true, then the indexer will poll and subscribe to new events to capture them faster.  You MUST use a websockets-based connection (wss://) and not an http:// based connection for the web3 RPC if you choose to enable this.  
+An indexer javascript file must export a 'static async' method named 'modifyLedgerByEvent' which has two arguments: event and mongoInterface.   Vibegraph will call this method and pass in these two arguments whenever it recieves new data from the web3 connection.  You can handle this data in any way that you want.  Typically, you will parse the event object and then interpret that data to update or insert data into the mongodb using the mongoInterface object.    
 
 
+#### Database Topology
+
+Vibegraph will automatically create a series of collections inside of the mongo database as it runs.  
+
+"contract_state": Used to track the synchronization status of each contract being indexed. The 'currentIndexingBlock' integer describes the latest block that events have been collected up to.  The 'synced' boolean describes whether or not the event data has been synced to the head of the chain yet.  Type describes the type of the contract and thus the abi and handler that is being used to process incoming events.  
+
+"event_list": used to store raw data of incoming events 
+
+"event_data":  used to store raw data of incoming web3 requests 
+
+ 
 
 ## How you can contribute to this repo
 
