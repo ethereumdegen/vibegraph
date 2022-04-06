@@ -1,8 +1,8 @@
 {
   "name": "vibegraph",
-  "version": "0.29.5",
+  "version": "0.29.6",
   "description": "Web3 data collection bot that saves events to MongoDB by synchonizing relevant chaindata",
-  "main": "index.js",
+  "main": "index", 
   "scripts": {
     "test": "mocha tests/**",
     "testrun": "node tasks/vibeRunner.js",
