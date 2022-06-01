@@ -4,18 +4,27 @@ const web3utils = require('web3').utils
 
 module.exports =  class IndexerERC20 {
 
-    static async modifyLedgerByEvent(event,mongoInterface){
+    mongoInterface
 
-        await IndexerERC20.modifyERC20LedgerByEvent(event,mongoInterface)
+    async initialize(mongoInterface){
+
+        if(mongoInterface){
+            this.mongoInterface = mongoInterface
+        }
+      
 
     }
 
 
+    async modifyLedgerByEvent(event){
 
+        await IndexerERC20.modifyERC20LedgerByEvent(event,this.mongoInterface)
 
+    }
+ 
 
    
-    static async modifyERC20LedgerByEvent(  event, mongoInterface){
+    async modifyERC20LedgerByEvent(  event, mongoInterface){
      
         let eventName = event.event 
 

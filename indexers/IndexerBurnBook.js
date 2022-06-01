@@ -4,7 +4,28 @@
 const web3utils = require('web3').utils
 module.exports =  class IndexerBurnBook {
 
-    static async modifyLedgerByEvent(event,mongoInterface){ 
+
+    mongoInterface
+
+    async initialize(mongoInterface){
+
+        if(mongoInterface){
+            this.mongoInterface = mongoInterface
+        }
+      
+
+    }
+
+
+    async modifyLedgerByEvent(event){
+
+        await IndexerBurnBook.modifyBurnBookLedgerByEvent(event,this.mongoInterface)
+
+    }
+ 
+
+
+    static async modifyBurnBookLedgerByEvent(event,mongoInterface){ 
   
         let eventName = event.event   
 

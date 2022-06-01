@@ -33,6 +33,7 @@ describe("ERC1155 Indexer",   function() {
     let userB  = web3.eth.accounts.create() 
 
     let mongoInterface 
+    let indexer 
 
     
     const nftContractAddress = web3.utils.toChecksumAddress("0x9c8ff314c9bc7f6e59a9d9225fb22946427edc03")
@@ -51,6 +52,8 @@ describe("ERC1155 Indexer",   function() {
 
         await mongoInterface.deleteMany('erc1155_balances', { }  )
 
+        indexer = new IndexerERC1155(   )
+        await indexer.initialize( mongoInterface)
 
     })
  
@@ -66,14 +69,14 @@ describe("ERC1155 Indexer",   function() {
              _id: 2,
              _value: 3}} 
         
-        await IndexerERC1155.modifyERC1155LedgerByEvent(event,mongoInterface) 
+        await indexer.modifyLedgerByEvent(event,mongoInterface) 
   
         let existingAccount = await mongoInterface.findOne('erc1155_balances', {accountAddress: userB.address, contractAddress: nftContractAddress }  )
           
         existingAccount.should.exist 
         existingAccount.tokenBalances['2'].should.eql(3)
 
-        await IndexerERC1155.modifyERC1155LedgerByEvent(event,mongoInterface) 
+        await indexer.modifyLedgerByEvent(event,mongoInterface) 
 
         existingAccount = await mongoInterface.findOne('erc1155_balances', {accountAddress: userB.address, contractAddress: nftContractAddress }  )
           
@@ -94,7 +97,7 @@ describe("ERC1155 Indexer",   function() {
              _id: 2,
              _value: 3}} 
         
-        await IndexerERC1155.modifyERC1155LedgerByEvent(event,mongoInterface) 
+        await indexer.modifyLedgerByEvent(event,mongoInterface) 
   
         let existingAccount = await mongoInterface.findOne('erc1155_balances', {accountAddress: userB.address, contractAddress: nftContractAddress }  )
           
@@ -111,7 +114,7 @@ describe("ERC1155 Indexer",   function() {
              _id: 2,
              _value: 1}} 
 
-        await IndexerERC1155.modifyERC1155LedgerByEvent(removalEvent,mongoInterface) 
+        await indexer.modifyLedgerByEvent(removalEvent,mongoInterface) 
 
         existingAccount = await mongoInterface.findOne('erc1155_balances', {accountAddress: userB.address, contractAddress: nftContractAddress }  )
           
@@ -133,14 +136,14 @@ describe("ERC1155 Indexer",   function() {
              _ids: [2,7],
              _values: [3,5]}} 
         
-        await IndexerERC1155.modifyERC1155LedgerByEvent(event,mongoInterface) 
+        await indexer.modifyLedgerByEvent(event,mongoInterface) 
   
         let existingAccount = await mongoInterface.findOne('erc1155_balances', {accountAddress: userB.address, contractAddress: nftContractAddress }  )
           
         existingAccount.should.exist 
         existingAccount.tokenBalances['2'].should.eql(3)
 
-        await IndexerERC1155.modifyERC1155LedgerByEvent(event,mongoInterface) 
+        await indexer.modifyLedgerByEvent(event,mongoInterface) 
 
         existingAccount = await mongoInterface.findOne('erc1155_balances', {accountAddress: userB.address, contractAddress: nftContractAddress }  )
           

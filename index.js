@@ -42,9 +42,9 @@ var onIndexCallback;
 var debug = false;
 
 var baseIndexers = [
-    { type:'erc20', abi: ERC20ABI ,  handler: IndexerERC20  },
-    { type:'erc721', abi: ERC721ABI ,  handler: IndexerERC721  },
-    { type:'erc1155', abi: ERC721ABI ,  handler: IndexerERC1155  } 
+    { type:'erc20', abi: ERC20ABI ,  handler: new IndexerERC20()  },
+    { type:'erc721', abi: ERC721ABI ,  handler: new IndexerERC721()  },
+    { type:'erc1155', abi: ERC721ABI ,  handler: new IndexerERC1155()  } 
 ]
 /*
 var indexers = {
@@ -80,6 +80,10 @@ module.exports =  class VibeGraph {
         && typeof mongoOptions.databaseSetupCallback == "function"){
             await mongoOptions.databaseSetupCallback(this.mongoInterface)
         }
+
+
+      
+
         
         
     }
@@ -173,6 +177,14 @@ module.exports =  class VibeGraph {
         if(indexingConfig.customIndexers){
             customIndexersArray = indexingConfig.customIndexers
         }
+        //initialize all indexers 
+
+
+        let allIndexers = baseIndexers.concat( customIndexersArray )
+        await Promise.all( allIndexers.map( x => x.initialize() )  )
+
+
+
 
         if(!indexingConfig.indexRate){
             indexingConfig.indexRate = 10*1000;

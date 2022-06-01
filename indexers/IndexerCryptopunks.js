@@ -4,11 +4,25 @@ const web3utils = require('web3').utils
 
 module.exports =  class IndexerERC721 {
 
-    static async modifyLedgerByEvent(event,mongoInterface){
+    mongoInterface
 
-        await IndexerERC721.modifyCryptopunkLedgerByEvent(event,mongoInterface)
+    async initialize(mongoInterface){
+
+        if(mongoInterface){
+            this.mongoInterface = mongoInterface
+        }
+      
 
     }
+
+
+    async modifyLedgerByEvent(event){
+
+        await IndexerERC721.modifyCryptopunkLedgerByEvent(event,this.mongoInterface)
+
+    }
+
+   
 
   
 

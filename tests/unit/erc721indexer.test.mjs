@@ -24,8 +24,9 @@ import IndexerERC721 from '../../indexers/IndexerERC721.js'
  should()
 
 
-describe("ERC1155 Indexer",   function() {
+describe("ERC721 Indexer",   function() {
 
+    
     let web3 = new Web3( web3Config.web3provider  )
 
     let operator = web3.eth.accounts.create() 
@@ -33,6 +34,8 @@ describe("ERC1155 Indexer",   function() {
     let userB  = web3.eth.accounts.create() 
 
     let mongoInterface 
+
+    let indexer 
 
     
     const nftContractAddress = web3.utils.toChecksumAddress("0x9c8ff314c9bc7f6e59a9d9225fb22946427edc03")
@@ -52,7 +55,8 @@ describe("ERC1155 Indexer",   function() {
         await mongoInterface.deleteMany('erc721_balances', { }  )
         await mongoInterface.deleteMany('erc721_token', { }  )
 
-
+        indexer = new IndexerERC721(   )
+        await indexer.initialize( mongoInterface)
     })
  
     it("can add records", async function() { 
@@ -66,14 +70,14 @@ describe("ERC1155 Indexer",   function() {
              _to: userB.address,
              _id: 2 }} 
         
-        await IndexerERC721.modifyLedgerByEvent(event,mongoInterface) 
+        await indexer.modifyLedgerByEvent(event,mongoInterface) 
   
         let existingAccount = await mongoInterface.findOne('erc721_balances', {accountAddress: userB.address, contractAddress: nftContractAddress }  )
           
         existingAccount.should.exist 
         existingAccount.tokenIds.should.include(2)
 
-        await IndexerERC721.modifyLedgerByEvent(event,mongoInterface) 
+        await indexer.modifyLedgerByEvent(event,mongoInterface) 
 
         existingAccount = await mongoInterface.findOne('erc721_balances', {accountAddress: userB.address, contractAddress: nftContractAddress }  )
           
@@ -98,7 +102,7 @@ describe("ERC1155 Indexer",   function() {
              _to: userA.address,
              _id: 2 }} 
         
-        await IndexerERC721.modifyLedgerByEvent(event,mongoInterface) 
+        await indexer.modifyLedgerByEvent(event,mongoInterface) 
   
         let existingAccount = await mongoInterface.findOne('erc721_balances', {accountAddress: userB.address, contractAddress: nftContractAddress }  )
           

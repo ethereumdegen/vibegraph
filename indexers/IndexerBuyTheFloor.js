@@ -4,7 +4,28 @@
 const web3utils = require('web3').utils
 module.exports =  class IndexerBuyTheFloor {
 
-    static async modifyLedgerByEvent(event,mongoInterface){ 
+
+
+    mongoInterface
+
+    async initialize(mongoInterface){
+
+        if(mongoInterface){
+            this.mongoInterface = mongoInterface
+        }
+      
+
+    }
+
+    async modifyLedgerByEvent(event){
+
+        await IndexerBuyTheFloor.modifyBuyTheFloorLedgerByEvent(event,this.mongoInterface)
+
+    }
+ 
+
+    
+    static async modifyBuyTheFloorLedgerByEvent(event,mongoInterface){ 
   
         let eventName = event.event   
 
