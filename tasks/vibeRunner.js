@@ -34,7 +34,7 @@ const IndexerCryptopunks = require('../indexers/IndexerCryptopunks')
             courseBlockGap: 8000,
             fineBlockGap: 20,
             logging:true,
-            subscribe: true, 
+            subscribe: false, 
             customIndexers:[{
                 type:'Cryptopunks', 
                 abi: CryptopunksABI ,  

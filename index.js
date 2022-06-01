@@ -83,7 +83,7 @@ module.exports =  class VibeGraph {
 
 
       
-        await Promise.all( baseIndexers.map( x => x.initialize() )  )
+        await Promise.all( baseIndexers.map( x => x.handler.initialize() )  )
 
 
         
