@@ -83,6 +83,8 @@ module.exports =  class VibeGraph {
 
 
       
+        await Promise.all( baseIndexers.map( x => x.initialize() )  )
+
 
         
         
@@ -177,14 +179,7 @@ module.exports =  class VibeGraph {
         if(indexingConfig.customIndexers){
             customIndexersArray = indexingConfig.customIndexers
         }
-        //initialize all indexers 
-
-
-        let allIndexers = baseIndexers.concat( customIndexersArray )
-        await Promise.all( allIndexers.map( x => x.initialize() )  )
-
-
-
+     
 
         if(!indexingConfig.indexRate){
             indexingConfig.indexRate = 10*1000;
