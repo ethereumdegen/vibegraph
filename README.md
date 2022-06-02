@@ -10,7 +10,7 @@ Data collection bot for Web3 events such as Transfer/Approval events of ERC20 an
 
     npm install
 
-    npm run testrun 
+    npm run vibegraph 
 
 
 
