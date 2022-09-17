@@ -51,6 +51,15 @@ Data collection bot for Web3 events such as Transfer/Approval events of ERC20 an
  As vibegraph is scraping chaindata for each ERC20/ERC721 token, it is also building a cache of user balances in the tables named 'erc20_balances' and 'erc721_balances'. 
  
  
+ ### Examples (see it in action!)
+ 
+ Here is an open source project that uses Vibegraph to scrape ERC20 events. Use this as a reference implementation!
+ 
+ https://github.com/OpenSourceMfers/open-0xbtc-api/blob/master/server/lib/dataghost.ts
+ 
+ 
+ 
+ 
  #### Configuration 
  
  "contracts": An array of objects, each with 'address', 'startBlock', and'type'.  For a smart contract, the address will be the smart contract address, the start block will be the block number on which the contract was deployed, and the type is a string that describes the custom indexer script that will be used. (See 'Custom Indexers' for more information.) 
