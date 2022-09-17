@@ -1,8 +1,7 @@
-
-
-
+ 
+const VibegraphIndexer = require('./VibegraphIndexer')
 const web3utils = require('web3').utils
-module.exports =  class IndexerBurnBook {
+module.exports =  class IndexerBurnBook extends VibegraphIndexer{
 
 
     mongoInterface

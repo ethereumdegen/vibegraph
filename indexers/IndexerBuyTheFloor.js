@@ -1,8 +1,8 @@
 
 
-
+const VibegraphIndexer = require('./VibegraphIndexer')
 const web3utils = require('web3').utils
-module.exports =  class IndexerBuyTheFloor {
+module.exports =  class IndexerBuyTheFloor extends VibegraphIndexer{
 
 
 

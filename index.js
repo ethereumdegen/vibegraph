@@ -1,4 +1,3 @@
-
  
 const MongoInterface = require('./lib/mongo-interface')
 const Web3Helper = require('./lib/web3-helper')
@@ -6,6 +5,8 @@ const Web3Helper = require('./lib/web3-helper')
 const web3utils = require('web3').utils
 
 let envmode = process.env.NODE_ENV
+
+
 
 /*
     indexingConfig:{
@@ -31,6 +32,7 @@ var SAFE_EVENT_COUNT = 7000
 var LOW_EVENT_COUNT = 1500
 
 
+const VibegraphIndexer = require('./indexers/VibegraphIndexer')
 const IndexerERC1155 = require('./indexers/IndexerERC1155')
 const IndexerERC721 = require('./indexers/IndexerERC721')
 const IndexerERC20 = require('./indexers/IndexerERC20')  
@@ -53,6 +55,8 @@ var indexers = {
 }*/
 
 module.exports =  class VibeGraph {
+
+    
 
     constructor(  )
     {

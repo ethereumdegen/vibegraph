@@ -1,8 +1,10 @@
 
+const VibegraphIndexer = require('./VibegraphIndexer')
+
 const web3utils = require('web3').utils
 
 
-module.exports =  class IndexerERC721 {
+module.exports =  class IndexerERC721 extends VibegraphIndexer{
 
 
     mongoInterface
