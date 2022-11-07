@@ -62,8 +62,7 @@ Data collection bot for Web3 events such as Transfer/Approval events of ERC20 an
         
         await vibegraph.updateLedger() //execute callbacks on indexers from the events 
         
-        await vibegraph.updateBlockNumber() //keep blocknumber updated - only needs to run about every 60 seconds 
-
+    
         sleep(1000)
      }
 

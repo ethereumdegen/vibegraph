@@ -47,6 +47,9 @@ var debug = false;
 var baseIndexers = [
      
 ]
+
+
+var blocknumberUpdatedAt;
 /*
 var indexers = {
     'erc721': IndexerERC721,
@@ -125,15 +128,7 @@ module.exports =  class VibeGraph {
             onIndexCallback = this.indexingConfig.onIndexCallback
         }
   
-          
-
-        await this.updateBlockNumber() 
-
-        if(this.maxBlockNumber == null){
-            console.error('Cannot fetch the blocknumber: Stopping Process')
-            return 
-        }
-        
+           
         
     }
  
@@ -149,11 +144,7 @@ module.exports =  class VibeGraph {
 
         let updateLedgerLoop = new SingletonLoopMethod(  this.updateLedger.bind(this) )
         updateLedgerLoop.start( 1000 )
-
-        let updateBlockNumberLoop = new SingletonLoopMethod(  this.updateBlockNumber.bind(this) )
-        updateBlockNumberLoop.start(  this.indexingConfig.updateBlockNumberRate )
-  
-
+ 
     }
 
 
@@ -382,6 +373,8 @@ module.exports =  class VibeGraph {
 
     async updateLedger(){
 
+        
+
         if(typeof this.ledgerContractIndex == 'undefined'){
             this.ledgerContractIndex = 0
         }
@@ -465,10 +458,20 @@ module.exports =  class VibeGraph {
     }
 
 
+    blockNumberIsStale(){
+
+        let updateBlockNumberRate = this.indexingConfig && this.indexingConfig.updateBlockNumberRate ? this.indexingConfig.updateBlockNumberRate : 60*1000
+
+        return !blocknumberUpdatedAt ||  ( Date.now() - blocknumberUpdatedAt )  > updateBlockNumberRate
+    }
+
+
     async updateBlockNumber(){
          
         try{ 
             this.maxBlockNumber = await Web3Helper.getBlockNumber(this.web3)
+
+            blocknumberUpdatedAt = Date.now(); 
 
             return this.maxBlockNumber 
         }catch(e){
@@ -496,7 +499,14 @@ module.exports =  class VibeGraph {
     }
 
     async indexData(){    
- 
+        
+        if(this.blockNumberIsStale){
+            await this.updateBlockNumber( )
+        }
+
+        if(!this.maxBlockNumber){
+            throw new Error("No max block number! cannot index data")
+        }
         
 
         let contractData = this.contractsArray[this.currentContractIndex]
@@ -517,10 +527,6 @@ module.exports =  class VibeGraph {
         let scaledCourseBlockGap = await this.getScaledCourseBlockGap( contractAddress )
 
 
-        if(!this.maxBlockNumber){
-            console.log('Warning: no maxBlockNumber ' )
-            return 
-        }
        
         if(cIndexingBlock + scaledCourseBlockGap < this.maxBlockNumber){
             
