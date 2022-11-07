@@ -6,6 +6,7 @@ const web3utils = require('web3').utils
 
 
 var Web3 = require('web3')
+const SingletonLoopMethod = require('./lib/singleton-loop-method')
 
 //let envmode = process.env.NODE_ENV
 
@@ -64,27 +65,98 @@ module.exports =  class VibeGraph {
         
     }
 
-    async init( mongoOptions ){
-        if(!mongoOptions.dbName){
+    async init( initConfig ){
+        if(!initConfig.dbName){
             throw new Error("Vibegraph init: Must specify a dbName in config")
         }
 
-        let dbName = mongoOptions.dbName  
-        let mongoConnectURI = mongoOptions.mongoConnectURI
+        let dbName = initConfig.dbName  
+        let mongoConnectURI = initConfig.mongoConnectURI
  
 
         this.mongoInterface = new MongoInterface( ) 
         await this.mongoInterface.init( dbName , mongoConnectURI )
 
-        if(mongoOptions.databaseSetupCallback 
-        && typeof mongoOptions.databaseSetupCallback == "function"){
-            await mongoOptions.databaseSetupCallback(this.mongoInterface)
+        if(initConfig.databaseSetupCallback 
+        && typeof initConfig.databaseSetupCallback == "function"){
+            await initConfig.databaseSetupCallback(this.mongoInterface)
         } 
       
         await Promise.all( baseIndexers.map( x => x.handler.initialize() )  )
 
+
+        
+        await this.prepIndexing( initConfig ) 
+        
+        
         
     }
+
+
+
+
+    async prepIndexing( indexingConfig ){
+
+        this.indexingConfig = this.parseIndexingConfig( indexingConfig ) 
+
+ 
+        if(!indexingConfig || !indexingConfig.web3ProviderUri){
+            throw new Error("Vibegraph prepIndexing: Must specify a web3ProviderUri in config")
+        }
+
+
+        this.web3 = new Web3( indexingConfig.web3ProviderUri )
+
+
+        this.contractsArray = await this.initializeContractsArray(  indexingConfig.contracts , this.mongoInterface )
+ 
+
+        if(this.indexingConfig.customIndexers){
+            customIndexersArray = indexingConfig.customIndexers
+        } 
+
+
+        if(this.indexingConfig.safeEventCount){
+            SAFE_EVENT_COUNT = parseInt(indexingConfig.safeEventCount)
+        } 
+ 
+
+        if(this.indexingConfig.onIndexCallback){
+            onIndexCallback = this.indexingConfig.onIndexCallback
+        }
+  
+          
+
+        await this.updateBlockNumber() 
+
+        if(this.maxBlockNumber == null){
+            console.error('Cannot fetch the blocknumber: Stopping Process')
+            return 
+        }
+        
+        
+    }
+ 
+
+    async startIndexing(   ){
+ 
+        if(this.indexingConfig.subscribe){             
+            this.subscribeToEvents( )           
+        } 
+  
+        this.indexingLoop = new SingletonLoopMethod(  this.indexData.bind(this) )
+        this.indexingLoop.start( this.indexingConfig.indexRate )
+
+        let updateLedgerLoop = new SingletonLoopMethod(  this.updateLedger.bind(this) )
+        updateLedgerLoop.start( 1000 )
+
+        let updateBlockNumberLoop = new SingletonLoopMethod(  this.updateBlockNumber.bind(this) )
+        updateBlockNumberLoop.start(  this.indexingConfig.updateBlockNumberRate )
+  
+
+    }
+
+
 
 
     getIndexerForContractType(contractType){
@@ -128,35 +200,56 @@ module.exports =  class VibeGraph {
     }
     
 
-    async startIndexing( indexingConfig ){
 
-        
-        this.indexingConfig = indexingConfig
- 
 
-        if(!indexingConfig || !indexingConfig.web3ProviderUri){
-            throw new Error("Vibegraph startIndexing: Must specify a web3ProviderUri in config")
+    parseIndexingConfig( conf ){
+
+        let output = JSON.parse(JSON.stringify(conf))
+  
+        if(!output.indexRate){
+            output.indexRate = 10*1000;
         }
 
-        this.web3 = new Web3( indexingConfig.web3ProviderUri )
+        if(!output.updateBlockNumberRate){
+            output.updateBlockNumberRate = 60*1000;
+        }
+ 
 
-       
-        this.contractsArray = []
+        if(!output.courseBlockGap){
+            output.courseBlockGap =  1000;
+        }
 
-        for(let contract of indexingConfig.contracts){
+        if(!output.fineBlockGap){
+            output.fineBlockGap = 50;
+        }
+  
+
+        return output 
+    }
+
+
+
+
+
+
+    async initializeContractsArray(  contractsConfigArray , mongoInterface  ){
+
+        let outputArray = []
+
+        for(let contract of contractsConfigArray){
 
             if(!contract.startBlock) contract.startBlock = 0;
-            if(!contract.type) contract.type = 'ERC20';
+            if(!contract.type) throw new Error("Vibegraph: Missing contract type specification ");
 
             contract.address = web3utils.toChecksumAddress(contract.address)
 
-            this.contractsArray.push(contract)
+            outputArray.push(contract)
 
 
 
-            ///init mongo records
+            ///init contract state record 
 
-            let existingState = await this.mongoInterface.findOne('contract_state', {contractAddress: contract.address})
+            let existingState = await mongoInterface.findOne('contract_state', {contractAddress: contract.address})
             if(!existingState){    
 
                let newState = { contractAddress: contract.address, 
@@ -167,83 +260,16 @@ module.exports =  class VibeGraph {
                 lastUpdated: Date.now()
             
             }
-               await this.mongoInterface.insertOne('contract_state', newState)
+               await mongoInterface.insertOne('contract_state', newState)
             } 
 
 
         }
 
-       
+        return outputArray
 
-       
-        if(indexingConfig.customIndexers){
-            customIndexersArray = indexingConfig.customIndexers
-        }
-     
-
-        if(!indexingConfig.indexRate){
-            indexingConfig.indexRate = 10*1000;
-        }
-
-        if(indexingConfig.debug){
-            debug = true 
-        }
-
-        if(indexingConfig.onIndexCallback){
-           onIndexCallback = indexingConfig.onIndexCallback
-        }
-
-        if(!indexingConfig.updateBlockNumberRate){
-            indexingConfig.updateBlockNumberRate = 60*1000;
-        }
- 
-
-        if(!indexingConfig.courseBlockGap){
-            indexingConfig.courseBlockGap =  1000;
-        }
-
-        if(!indexingConfig.fineBlockGap){
-            indexingConfig.fineBlockGap = 50;
-        }
- 
-
-        if(indexingConfig.safeEventCount){
-            SAFE_EVENT_COUNT = parseInt(indexingConfig.safeEventCount)
-        }
-
-        if(indexingConfig.subscribe){
-            
-
-
-            this.subscribeToEvents( this.contractsArray )
-           
-        }
-    
-
-        //this.currentEventFilterBlock = indexingConfig.startBlock;
-
-        //this.maxBlockNumber = await Web3Helper.getBlockNumber(this.web3)
-        await this.updateBlockNumber()
-
-        this.ledgerContractIndex = 0;
-
-        this.updateLedger(  )
-
-        if(this.maxBlockNumber == null){
-            console.error('Cannot fetch the blocknumber: Stopping Process')
-            return 
-        }
-        
-        this.activelyIndexing = true;
-       
-        this.indexData()
-
-
-
-        //this.indexUpdater = setInterval(this.indexData.bind(this), indexingConfig.indexRate)
-
-        this.blockNumberUpdater = setInterval(this.updateBlockNumber.bind(this), indexingConfig.updateBlockNumberRate)
     }
+
 
 
     incrementContractsCount( ){
@@ -264,9 +290,9 @@ module.exports =  class VibeGraph {
 
     
 
-    subscribeToEvents(  contractsArray /* contractAddress, contractABI*/ ){
+    subscribeToEvents(   ){
 
-        
+        let contractsArray = this.contractsArray  
 
         let knownEventTokens = []
 
@@ -355,6 +381,10 @@ module.exports =  class VibeGraph {
     }
 
     async updateLedger(){
+
+        if(typeof this.ledgerContractIndex == 'undefined'){
+            this.ledgerContractIndex = 0
+        }
         
         let contractData = this.contractsArray[this.ledgerContractIndex]
         let contractAddress =  contractData.address 
@@ -385,14 +415,20 @@ module.exports =  class VibeGraph {
             this.ledgerContractIndex=0;
         } 
 
-        setTimeout( this.updateLedger.bind(this)  , 1000 );
+        //setTimeout( this.updateLedger.bind(this)  , 1000 );
+
+        return true 
     }
 
     stopIndexing(){
-        //clearInterval(this.indexUpdater)
-        //clearInterval(this.blockNumberUpdater)
+      
 
-        this.activelyIndexing = false
+        if(this.indexingLoop){
+            this.indexingLoop.stop() 
+        }else{
+            console.error("no indexing loop to stop!")
+        }
+        
     }
 
 
@@ -430,14 +466,16 @@ module.exports =  class VibeGraph {
 
 
     async updateBlockNumber(){
-        console.log('fetching blocknumber')
+         
         try{ 
             this.maxBlockNumber = await Web3Helper.getBlockNumber(this.web3)
-        }catch(e){
 
+            return this.maxBlockNumber 
+        }catch(e){
             console.error(e)
         }
 
+        return undefined 
     }
 
     async setParameterForContract(contractAddress, paramName, newValue){
@@ -458,9 +496,7 @@ module.exports =  class VibeGraph {
     }
 
     async indexData(){    
-
-      //  let tinyfoxState = await this.mongoInterface.findOne('contract_state', {})
-
+ 
         
 
         let contractData = this.contractsArray[this.currentContractIndex]
@@ -528,19 +564,13 @@ module.exports =  class VibeGraph {
         }
         this.incrementContractsCount(  )
 
-        let delayToNextIndex = this.indexingConfig.indexRate;
-        
-        if(this.activelyIndexing){
-            if(madeApiRequest){
-                setTimeout(this.indexData.bind(this),delayToNextIndex);
-            }else{
-                setTimeout(this.indexData.bind(this),100);
-            }
-            
+
+        return {
+            madeApiRequest,
+            cIndexingBlock,
+            contractAddress
+
         }
-        
-
-
 
     }
 

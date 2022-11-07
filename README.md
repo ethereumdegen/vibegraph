@@ -1,7 +1,7 @@
-# 🐸VibeGraph🐸
+# VibeGraph
 Data collection bot for Web3 events such as Transfer/Approval events of ERC20 and ERC721 tokens.  Similar to subgraph but opensource and lightweight.
 
-!VIBE
+!VIBE 🐸
 
 
 
@@ -21,25 +21,52 @@ Data collection bot for Web3 events such as Transfer/Approval events of ERC20 an
 #### How to use (In NodeJS) 
 
 
-         let web3 = new Web3( web3Config.web3provider  )
+    //top of file 
+    let VibeGraph = require('vibegraph')
+    let ERC721ABI = require( '../config/ERC721ABI.json' )
 
-        let vibegraphConfig = {
-            contracts:[{address:"0x39ec448b891c476e166b3c3242a90830db556661", startBlock: 4465713, type:'ERC721'},
-                            {address:"0x7cea7e61f8be415bee361799f19644b9889713cd", startBlock: 4528636, type:'ERC721'}],
-             
-            dbName:"vibegraph__dev",
-            indexRate: 10*1000,
-            courseBlockGap: 8000,
-            logging:true,
-            subscribe: false
-        }
+    //define the config 
+    let vibegraphConfig = {
+        contracts:[{address:"0x39ec448b891c476e166b3c3242a90830db556661", startBlock: 4465713, type:'ERC721'},
+                        {address:"0x7cea7e61f8be415bee361799f19644b9889713cd", startBlock: 4528636, type:'ERC721'}],
+            
+        dbName:"vibegraph__dev",
+        indexRate: 10*1000,
+        courseBlockGap: 8000,
+        logging:true,
+        subscribe: false,
+        customIndexers:[{
+                type:'ERC721', 
+                abi: ERC721ABI ,  
+                handler: indexerErc721   //see example in ./indexers 
+             }],
+        web3ProviderUri:  "wss://...." 
+    }
 
-        let vibegraph = new VibeGraph()
-        await vibegraph.init( vibegraphConfig )
-        vibegraph.startIndexing( web3, vibegraphConfig )  
+
+#### Boot as a looping service 
+
+    let vibegraph = new VibeGraph()
+    await vibegraph.init( vibegraphConfig )
+    vibegraph.startIndexing( )  
 
 
+#### Call in your own loop 
+
+     let vibegraph = new VibeGraph()
+     await vibegraph.init( vibegraphConfig )
+
+     while (USER_LOOP){
+
+        await vibegraph.indexData() //fetch the event logs from rpc 
         
+        await vibegraph.updateLedger() //execute callbacks on indexers from the events 
+        
+        await vibegraph.updateBlockNumber() //keep blocknumber updated - only needs to run about every 60 seconds 
+
+        sleep(1000)
+     }
+
         
         
         

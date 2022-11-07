@@ -59,7 +59,7 @@ let ERC1155ABI = require( '../config/contracts/SuperERC1155ABI.json' )
                 abi: ERC721ABI ,  
                 handler: indexerErc721
              }],
-             web3ProviderUri: web3Config.web3provider
+            web3ProviderUri: web3Config.web3provider
         }
 
         let vibegraph = new VibeGraph()
