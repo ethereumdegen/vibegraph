@@ -22,7 +22,7 @@ let ERC1155ABI = require( '../config/contracts/SuperERC1155ABI.json' )
 
             findOne: function(){
                 console.log('Mock Mongo: Find One')
-                return {id:0}
+                return {id:0, tokenIds:[]}
             },
             insertOne: function(){
                 console.log('Mock Mongo: Insert One')
