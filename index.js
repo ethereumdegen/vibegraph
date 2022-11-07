@@ -4,9 +4,16 @@ const Web3Helper = require('./lib/web3-helper')
 
 const web3utils = require('web3').utils
 
-let envmode = process.env.NODE_ENV
+
+var Web3 = require('web3')
+
+//let envmode = process.env.NODE_ENV
 
 
+
+/*
+ TODO: should convert this to typescript with well defined types 
+*/
 
 /*
     indexingConfig:{
@@ -24,19 +31,12 @@ let envmode = process.env.NODE_ENV
     }
 
 */
-let ERC721ABI = require( './config/contracts/SuperERC721ABI.json' )
-let ERC20ABI = require( './config/contracts/SuperERC20ABI.json' ) 
-let ERC1155ABI = require( './config/contracts/SuperERC1155ABI.json' )
 
 var SAFE_EVENT_COUNT = 7000
 var LOW_EVENT_COUNT = 1500
 
 
-const VibegraphIndexer = require('./indexers/VibegraphIndexer')
-const IndexerERC1155 = require('./indexers/IndexerERC1155')
-const IndexerERC721 = require('./indexers/IndexerERC721')
-const IndexerERC20 = require('./indexers/IndexerERC20')  
-
+ 
 var customIndexersArray = []
 
 var onIndexCallback; 
@@ -44,9 +44,7 @@ var onIndexCallback;
 var debug = false;
 
 var baseIndexers = [
-    { type:'erc20', abi: ERC20ABI ,  handler: new IndexerERC20()  },
-    { type:'erc721', abi: ERC721ABI ,  handler: new IndexerERC721()  },
-    { type:'erc1155', abi: ERC721ABI ,  handler: new IndexerERC1155()  } 
+     
 ]
 /*
 var indexers = {
@@ -67,30 +65,24 @@ module.exports =  class VibeGraph {
     }
 
     async init( mongoOptions ){
-        if(!mongoOptions.suffix){
-            mongoOptions.suffix = 'development'
+        if(!mongoOptions.dbName){
+            throw new Error("Vibegraph init: Must specify a dbName in config")
         }
 
-        let dbName = 'vibegraph_'.concat(mongoOptions.suffix)
-
-        if(mongoOptions.dbName){
-            dbName = mongoOptions.dbName
-        }
+        let dbName = mongoOptions.dbName  
+        let mongoConnectURI = mongoOptions.mongoConnectURI
+ 
 
         this.mongoInterface = new MongoInterface( ) 
-        await this.mongoInterface.init( dbName , mongoOptions )
+        await this.mongoInterface.init( dbName , mongoConnectURI )
 
         if(mongoOptions.databaseSetupCallback 
         && typeof mongoOptions.databaseSetupCallback == "function"){
             await mongoOptions.databaseSetupCallback(this.mongoInterface)
-        }
-
-
+        } 
       
         await Promise.all( baseIndexers.map( x => x.handler.initialize() )  )
 
-
-        
         
     }
 
@@ -108,11 +100,12 @@ module.exports =  class VibeGraph {
             if(contractType == indexer.type.toLowerCase()){
                 return indexer.handler
             }
-        }
+        }   
+
+
+        throw new Error("Vibegraph: No indexer registered for type ".concat( contractType  ))
         
-        console.error('WARNING: falling back to IndexerERC20')
-        //fallback 
-        return IndexerERC20;
+       
 
     }
 
@@ -130,21 +123,24 @@ module.exports =  class VibeGraph {
             }
         }
         
- 
-        //fallback 
-        console.error('WARNING: falling back to ERC20ABI')
-        return ERC20ABI;
+        throw new Error("Vibegraph: No registered ABI for type ".concat(type))
+  
     }
     
 
-    async startIndexing( web3, indexingConfig ){
-
-        this.web3 = web3
-        this.indexingConfig = indexingConfig
-
+    async startIndexing( indexingConfig ){
 
         
+        this.indexingConfig = indexingConfig
+ 
 
+        if(!indexingConfig || !indexingConfig.web3ProviderUri){
+            throw new Error("Vibegraph startIndexing: Must specify a web3ProviderUri in config")
+        }
+
+        this.web3 = new Web3( indexingConfig.web3ProviderUri )
+
+       
         this.contractsArray = []
 
         for(let contract of indexingConfig.contracts){
@@ -434,7 +430,7 @@ module.exports =  class VibeGraph {
 
 
     async updateBlockNumber(){
-
+        console.log('fetching blocknumber')
         try{ 
             this.maxBlockNumber = await Web3Helper.getBlockNumber(this.web3)
         }catch(e){
