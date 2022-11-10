@@ -463,14 +463,14 @@ module.exports =  class VibeGraph {
     }
 
 
-    async updateBlockNumber(){
+    async fetchLatestBlockNumber(){
          
         try{ 
-            this.maxBlockNumber = await Web3Helper.getBlockNumber(this.web3)
+            let latestBlockNumber = await Web3Helper.getBlockNumber(this.web3)
 
-            blocknumberUpdatedAt = Date.now(); 
+            
 
-            return this.maxBlockNumber 
+            return latestBlockNumber
         }catch(e){
             console.error(e)
         }
@@ -497,8 +497,9 @@ module.exports =  class VibeGraph {
 
     async indexData(){    
         
-        if(this.blockNumberIsStale){
-            await this.updateBlockNumber( )
+        if(!this.maxBlockNumber || this.blockNumberIsStale){
+            this.maxBlockNumber = await this.fetchLatestBlockNumber( )
+            blocknumberUpdatedAt = Date.now(); 
         }
 
         if(!this.maxBlockNumber){
