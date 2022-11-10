@@ -191,11 +191,9 @@ module.exports =  class VibeGraph {
     }
     
 
-
-
     parseIndexingConfig( conf ){
 
-        let output = JSON.parse(JSON.stringify(conf))
+        let output = conf//JSON.parse(JSON.stringify(conf))
   
         if(!output.indexRate){
             output.indexRate = 10*1000;
@@ -217,7 +215,6 @@ module.exports =  class VibeGraph {
 
         return output 
     }
-
 
 
 
