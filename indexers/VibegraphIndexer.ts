@@ -1,6 +1,6 @@
 
 
-module.exports =  class VibegraphIndexer{
+export default class VibegraphIndexer{
 
     async modifyLedgerByEvent(event){
 

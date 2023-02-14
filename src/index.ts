@@ -21,6 +21,7 @@ import {getCustomContract} from './lib/web3-helper'
 import SingletonLoopMethod from './lib/singleton-loop-method'
 //let envmode = process.env.NODE_ENV
 
+import VibegraphIndexer from '../indexers/VibegraphIndexer' 
 
 
 /*
@@ -48,16 +49,6 @@ var SAFE_EVENT_COUNT = 7000
 var LOW_EVENT_COUNT = 1500
 
 
- 
-var customIndexersArray = []
-
-var onIndexCallback; 
-
-var debug = false;
- 
-
-
-var blocknumberUpdatedAt;
 /*
 var indexers = {
     'erc721': IndexerERC721,
@@ -72,16 +63,67 @@ export interface DatabaseConfig {
     databaseSetupCallback?:Function 
 }
 
+ 
 
 export interface IndexingConfig {
     web3ProviderUri:string 
+    indexRate:number 
+    updateBlockNumberRate:number 
+    courseBlockGap:number 
+    fineBlockGap:number 
+
+    contracts: ContractConfig [] 
+    customIndexers: CustomIndexer[],
+    safeEventCount?: number 
+
+    onIndexCallback?: Function 
+
+} 
+
+export interface ContractConfig {
+    address:string ,
+    startBlock: number ,
+    type: string // match type of the custom indexer 
 
 }
+
+export interface CustomIndexer {
+    abi: ethers.ContractInterface,
+    handler: typeof VibegraphIndexer, 
+    type:string 
+}
+
+
+ 
 
 export default class VibeGraph {
 
     currentContractIndex:number = 0 
     rpcProvider?:ethers.providers.JsonRpcProvider
+
+
+    onIndexCallback?:Function
+
+    blocknumberUpdatedAt?:number 
+
+
+
+    contractsArray:ContractConfig[] = []
+    customIndexersArray:CustomIndexer[] = []  
+
+
+    indexingLoop?:any 
+
+ /*
+    var customIndexersArray = []
+
+    var onIndexCallback; 
+
+    var debug = false;
+
+    var blocknumberUpdatedAt;
+*/
+
 
     constructor(  )
     {
@@ -116,6 +158,7 @@ export default class VibeGraph {
 
         await this.prepIndexing( indexingConfig ) 
         
+        this.indexingConfig = indexingConfig
         
         
     }
@@ -136,21 +179,21 @@ export default class VibeGraph {
         //this.web3 = new Web3( indexingConfig.web3ProviderUri )
 
 
-        this.contractsArray = await this.initializeContractsArray(  indexingConfig.contracts , this.mongoInterface )
+        this.contractsArray = await this.initializeContractsArray(  indexingConfig.contracts  )
  
 
-        if(this.indexingConfig.customIndexers){
-            customIndexersArray = indexingConfig.customIndexers
+        if(indexingConfig.customIndexers){
+            this.customIndexersArray = indexingConfig.customIndexers
         } 
 
 
-        if(this.indexingConfig.safeEventCount){
-            SAFE_EVENT_COUNT = parseInt(indexingConfig.safeEventCount)
+        if(indexingConfig.safeEventCount){
+            SAFE_EVENT_COUNT = parseInt(indexingConfig.safeEventCount.toString())
         } 
  
 
-        if(this.indexingConfig.onIndexCallback){
-            onIndexCallback = this.indexingConfig.onIndexCallback
+        if(indexingConfig.onIndexCallback){
+           this.onIndexCallback = indexingConfig.onIndexCallback
         }
   
            
@@ -175,16 +218,16 @@ export default class VibeGraph {
 
 
 
-    getIndexerForContractType(contractType){
+    getIndexerForContractType(contractType:string){
         
         contractType = contractType.toLowerCase()
 
         
 
-        let allIndexers = baseIndexers.concat( customIndexersArray )
+       // let allIndexers = baseIndexers.concat( customIndexersArray )
 
          
-        for(let indexer of allIndexers){
+        for(let indexer of this.customIndexersArray){
             if(contractType == indexer.type.toLowerCase()){
                 return indexer.handler
             }
@@ -198,14 +241,14 @@ export default class VibeGraph {
     }
 
     
-     getABIFromType(type){
+     getABIFromType(type:string){
         type = type.toLowerCase()
 
 
-        let allIndexers = baseIndexers.concat( customIndexersArray )
+        //let allIndexers = baseIndexers.concat( customIndexersArray )
 
          
-        for(let indexer of allIndexers){
+        for(let indexer of this.customIndexersArray){
             if(type == indexer.type.toLowerCase()){
                 return indexer.abi
             }
@@ -216,36 +259,12 @@ export default class VibeGraph {
     }
     
 
-    parseIndexingConfig( conf ){
-
-        let output = conf//JSON.parse(JSON.stringify(conf))
-  
-        if(!output.indexRate){
-            output.indexRate = 10*1000;
-        }
-
-        if(!output.updateBlockNumberRate){
-            output.updateBlockNumberRate = 60*1000;
-        }
- 
-
-        if(!output.courseBlockGap){
-            output.courseBlockGap =  1000;
-        }
-
-        if(!output.fineBlockGap){
-            output.fineBlockGap = 50;
-        }
-  
-
-        return output 
-    }
 
 
 
 
 
-    async initializeContractsArray(  contractsConfigArray , mongoInterface  ){
+    async initializeContractsArray(  contractsConfigArray:ContractConfig[]    ){
 
         let outputArray = []
 
@@ -254,7 +273,7 @@ export default class VibeGraph {
             if(!contract.startBlock) contract.startBlock = 0;
             if(!contract.type) throw new Error("Vibegraph: Missing contract type specification ");
 
-            contract.address = web3utils.toChecksumAddress(contract.address)
+            contract.address = ethers.utils.getAddress(contract.address)
 
             outputArray.push(contract)
 
@@ -387,9 +406,9 @@ export default class VibeGraph {
             
         } )
 
-        subscription.on('changed', changed => console.log(changed))
-        subscription.on('error', err => { throw err })
-        subscription.on('connected', nr => console.log(nr)) 
+        subscription.on('changed', (changed:any) => console.log(changed))
+        subscription.on('error', (err:any) => { throw err })
+        subscription.on('connected', (nr:any) => console.log(nr)) 
 
     }
 
@@ -822,6 +841,33 @@ export default class VibeGraph {
 
 }
  
+
+
+function parseIndexingConfig( config:IndexingConfig ){
+
+    let output = config 
+
+    if(!output.indexRate){
+        output.indexRate = 10*1000;
+    }
+
+    if(!output.updateBlockNumberRate){
+        output.updateBlockNumberRate = 60*1000;
+    }
+
+
+    if(!output.courseBlockGap){
+        output.courseBlockGap =  1000;
+    }
+
+    if(!output.fineBlockGap){
+        output.fineBlockGap = 50;
+    }
+
+
+    return output 
+}
+
 
 
  
