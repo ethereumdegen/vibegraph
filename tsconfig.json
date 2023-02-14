@@ -1,0 +1,34 @@
+{
+  "compilerOptions": {
+  
+    "target": "es2015",
+     
+    "resolveJsonModule": true,
+    "declaration": true,
+    "lib": [
+      "ES6",
+      "dom"
+    ],
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "outDir": "dist",
+    "sourceMap": true
+  },
+  "typedocOptions": {
+    "entryPoints": ["src/index.ts"],
+    "emit": "both",
+    "out": "docs",
+    "includeVersion": true,
+    "theme": "markdown"
+  },
+  "include": [
+    "src/*",
+    "types"
+  ],
+  "exclude": [
+    "dist/*",
+    "node_modules/*"
+  ]
+}

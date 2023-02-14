@@ -1,11 +1,17 @@
  
+
+
+//const web3utils = require('web3').utils
+
+
+//var Web3 = require('web3')
+
+
+import { ethers } from "ethers";
+
+
 const MongoInterface = require('./lib/mongo-interface')
 const Web3Helper = require('./lib/web3-helper')
-
-const web3utils = require('web3').utils
-
-
-var Web3 = require('web3')
 const SingletonLoopMethod = require('./lib/singleton-loop-method')
 
 //let envmode = process.env.NODE_ENV
