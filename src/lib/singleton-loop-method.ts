@@ -10,15 +10,18 @@
     In this way, the execution code will only be running in a single instance at any given time.  However, the code will loop forever until stop() is called
 */
 
-module.exports = class SingletonLoopMethod {
+export class SingletonLoopMethod {
 
-    constructor(callback, args){
+    interval:any
+    executing:boolean
+
+    constructor(public callback:any, public args:any){
         this.registerMethod(callback,args)
     }
 
 
     //callback should be a promise 
-    registerMethod(  callback, args  ){
+    registerMethod(  callback:any, args:any  ){
         //console.log('typeof callback', typeof callback)
         //if(typeof callback!='Promise') throw 'Must be a promise'
 

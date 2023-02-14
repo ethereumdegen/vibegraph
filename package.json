@@ -2,20 +2,15 @@
   "name": "vibegraph",
   "version": "0.35.0",
   "description": "Web3 data collection bot that saves events to MongoDB by synchonizing relevant chaindata",
-  
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
     "dist",
     "types"
   ],
-
   "scripts": {
-  
-
     "test": "NODE_ENV=TEST ts-mocha -p tsconfig.testing.json 'test/**/*.spec.ts' --timeout 10000",
     "publish": "yarn npm publish --access public",
-
     "vibegraph": "node tasks/vibeRunner.js",
     "deleteIndexedData": "node tasks/deleteIndexedData.js"
   },
@@ -29,21 +24,18 @@
   "author": "apexmfer",
   "license": "MIT",
   "dependencies": {
+    "ethers": "^5.7.1",
     "mongodb": "^3.6.5",
-    
-    "ethers": "^5.7.1"
+    "mongoose": "^6.9.1"
   },
   "devDependencies": {
-    "chai": "^4.3.4",
-  
-   
     "@types/chai": "^4.3.3",
     "@types/mocha": "^10.0.0",
     "@types/node": "^18.11.2",
     "@typescript-eslint/eslint-plugin": "^5.5.0",
     "@typescript-eslint/parser": "^5.5.0",
     "babel-eslint": "^10.0.1",
-    
+    "chai": "^4.3.4",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-config-standard-kit": "0.15.1",

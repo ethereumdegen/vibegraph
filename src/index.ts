@@ -10,10 +10,15 @@
 import { ethers } from "ethers";
 
 
-const MongoInterface = require('./lib/mongo-interface')
-const Web3Helper = require('./lib/web3-helper')
-const SingletonLoopMethod = require('./lib/singleton-loop-method')
+import mongoose from 'mongoose'
 
+import {getCustomContract} from './lib/web3-helper'
+
+//const MongoInterface = require('./lib/mongo-interface')
+//const Web3Helper = require('./lib/web3-helper')
+
+
+import SingletonLoopMethod from './lib/singleton-loop-method'
 //let envmode = process.env.NODE_ENV
 
 
@@ -49,10 +54,7 @@ var customIndexersArray = []
 var onIndexCallback; 
 
 var debug = false;
-
-var baseIndexers = [
-     
-]
+ 
 
 
 var blocknumberUpdatedAt;
@@ -62,36 +64,46 @@ var indexers = {
     'erc20': IndexerERC20 
 }*/
 
-module.exports =  class VibeGraph {
+
+export interface VibegraphConfig {
+    dbName:string 
+    mongoConnectURI?:string 
+    databaseSetupCallback?:Function 
 
     
+}
+
+export default class VibeGraph {
+
+    currentContractIndex:number = 0 
 
     constructor(  )
     {
         
-        this.currentContractIndex = 0 
+     ///   this.currentContractIndex = 0 
        
         
     }
 
-    async init( initConfig ){
+    async init( initConfig:VibegraphConfig ){
         if(!initConfig.dbName){
             throw new Error("Vibegraph init: Must specify a dbName in config")
         }
 
-        let dbName = initConfig.dbName  
-        let mongoConnectURI = initConfig.mongoConnectURI
- 
+        let dbName = initConfig.dbName ? initConfig.dbName : 'vibegraph'
+        let mongoConnectURI = initConfig.mongoConnectURI ? initConfig.mongoConnectURI : 'localhost:27017'
 
-        this.mongoInterface = new MongoInterface( ) 
-        await this.mongoInterface.init( dbName , mongoConnectURI )
+ 
+        const mongooseConnection = await mongoose.connect(`mongodb://${mongoConnectURI}/${dbName}`);
+        //this.mongoInterface = new MongoInterface( ) 
+        //await this.mongoInterface.init( dbName , mongoConnectURI )
 
         if(initConfig.databaseSetupCallback 
         && typeof initConfig.databaseSetupCallback == "function"){
-            await initConfig.databaseSetupCallback(this.mongoInterface)
+            await initConfig.databaseSetupCallback( mongooseConnection )
         } 
       
-        await Promise.all( baseIndexers.map( x => x.handler.initialize() )  )
+       // await Promise.all( baseIndexers.map( x => x.handler.initialize() )  )
 
 
         
@@ -534,8 +546,10 @@ module.exports =  class VibeGraph {
        
         if(cIndexingBlock + scaledCourseBlockGap < this.maxBlockNumber){
             
-            let contractABI = this.getABIFromType(contractType) 
-            await this.indexContractData( contractAddress, contractABI, cIndexingBlock, scaledCourseBlockGap  )
+            let contractABI = this.getABIFromType(contractType)
+            let rpcProvider = this.rpcProvider 
+
+            await this.indexContractData( contractAddress, contractABI, rpcProvider, cIndexingBlock, scaledCourseBlockGap  )
             
             
     
@@ -550,7 +564,8 @@ module.exports =  class VibeGraph {
 
 
             let contractABI = this.getABIFromType(contractType) 
-            await this.indexContractData( contractAddress, contractABI, cIndexingBlock, remainingBlockGap  )
+            let rpcProvider = this.rpcProvider 
+            await this.indexContractData( contractAddress, contractABI, rpcProvider, cIndexingBlock, remainingBlockGap  )
          
           
 
@@ -626,11 +641,11 @@ module.exports =  class VibeGraph {
 
     }
 
-    async indexContractData(  contractAddress, contractABI, startBlock, blockGap ){
+    async indexContractData(  contractAddress:string, contractABI:ethers.ContractInterface, rpcProvider: ethers.providers.Provider, startBlock:number, blockGap:number ){
 
 
 
-        let contract = Web3Helper.getCustomContract( contractABI ,contractAddress, this.web3  )
+        let contract = getCustomContract( contractAddress, contractABI, rpcProvider  )
         
         var insertedMany; 
           
