@@ -65,17 +65,23 @@ var indexers = {
 }*/
 
 
-export interface VibegraphConfig {
+export type VibegraphConfig = DatabaseConfig & IndexingConfig
+export interface DatabaseConfig {
     dbName:string 
     mongoConnectURI?:string 
     databaseSetupCallback?:Function 
+}
 
-    
+
+export interface IndexingConfig {
+    web3ProviderUri:string 
+
 }
 
 export default class VibeGraph {
 
     currentContractIndex:number = 0 
+    rpcProvider?:ethers.providers.JsonRpcProvider
 
     constructor(  )
     {
@@ -106,8 +112,9 @@ export default class VibeGraph {
        // await Promise.all( baseIndexers.map( x => x.handler.initialize() )  )
 
 
-        
-        await this.prepIndexing( initConfig ) 
+        let indexingConfig = parseIndexingConfig( initConfig )
+
+        await this.prepIndexing( indexingConfig ) 
         
         
         
@@ -116,17 +123,17 @@ export default class VibeGraph {
 
 
 
-    async prepIndexing( indexingConfig ){
+    async prepIndexing( indexingConfig: IndexingConfig ){
 
-        this.indexingConfig = this.parseIndexingConfig( indexingConfig ) 
+      //  this.indexingConfig = this.parseIndexingConfig( indexingConfig ) 
 
  
         if(!indexingConfig || !indexingConfig.web3ProviderUri){
             throw new Error("Vibegraph prepIndexing: Must specify a web3ProviderUri in config")
         }
 
-
-        this.web3 = new Web3( indexingConfig.web3ProviderUri )
+        this.rpcProvider = new ethers.providers.JsonRpcProvider( indexingConfig.web3ProviderUri );
+        //this.web3 = new Web3( indexingConfig.web3ProviderUri )
 
 
         this.contractsArray = await this.initializeContractsArray(  indexingConfig.contracts , this.mongoInterface )
