@@ -23,6 +23,7 @@ import SingletonLoopMethod from './lib/singleton-loop-method'
 
 import VibegraphIndexer from '../indexers/VibegraphIndexer' 
 
+import {ContractState, IContractState} from '../models/contract_state'
 
 /*
  TODO: should convert this to typescript with well defined types 
@@ -71,6 +72,7 @@ export interface IndexingConfig {
     updateBlockNumberRate:number 
     courseBlockGap:number 
     fineBlockGap:number 
+    subscribe?:boolean
 
     contracts: ContractConfig [] 
     customIndexers: CustomIndexer[],
@@ -113,6 +115,14 @@ export default class VibeGraph {
 
 
     indexingLoop?:any 
+    subscribe:boolean = false
+    indexRate?:number
+    updateBlockNumberRate?:number 
+    maxBlockNumber?:number 
+
+    fineBlockGap?:number 
+
+    logLevel?:string = 'debug'
 
  /*
     var customIndexersArray = []
@@ -141,7 +151,7 @@ export default class VibeGraph {
         let dbName = initConfig.dbName ? initConfig.dbName : 'vibegraph'
         let mongoConnectURI = initConfig.mongoConnectURI ? initConfig.mongoConnectURI : 'localhost:27017'
 
- 
+        mongoose.pluralize(null);
         const mongooseConnection = await mongoose.connect(`mongodb://${mongoConnectURI}/${dbName}`);
         //this.mongoInterface = new MongoInterface( ) 
         //await this.mongoInterface.init( dbName , mongoConnectURI )
@@ -158,9 +168,13 @@ export default class VibeGraph {
 
         await this.prepIndexing( indexingConfig ) 
         
-        this.indexingConfig = indexingConfig
-        
-        
+      //  this.indexingConfig = indexingConfig
+
+        this.subscribe = !!indexingConfig.subscribe 
+        this.indexRate = indexingConfig.indexRate
+        this.updateBlockNumberRate = indexingConfig.updateBlockNumberRate
+            
+        this.fineBlockGap = indexingConfig.fineBlockGap
     }
 
 
@@ -203,12 +217,12 @@ export default class VibeGraph {
 
     async startIndexing(   ){
  
-        if(this.indexingConfig.subscribe){             
+        if(this.subscribe){             
             this.subscribeToEvents( )           
         } 
   
         this.indexingLoop = new SingletonLoopMethod(  this.indexData.bind(this) )
-        this.indexingLoop.start( this.indexingConfig.indexRate )
+        this.indexingLoop.start( this.indexRate )
 
         let updateLedgerLoop = new SingletonLoopMethod(  this.updateLedger.bind(this) )
         updateLedgerLoop.start( 1000 )
@@ -280,19 +294,20 @@ export default class VibeGraph {
 
 
             ///init contract state record 
-
-            let existingState = await mongoInterface.findOne('contract_state', {contractAddress: contract.address})
-            if(!existingState){    
-
-               let newState = { contractAddress: contract.address, 
+            let existingState = await ContractState.findOne(  {contractAddress: contract.address} )
+           
+            if(!existingState){        
+               let newState:Omit<IContractState,'_id'> = { 
+                contractAddress: contract.address, 
                 currentIndexingBlock: contract.startBlock, 
                 type: contract.type,
                 stepSizeScaleFactor: 1,
                 synced: false,
                 lastUpdated: Date.now()
-            
-            }
-               await mongoInterface.insertOne('contract_state', newState)
+                 }   
+
+            const created = await ContractState.create( newState )
+             
             } 
 
 
@@ -366,7 +381,7 @@ export default class VibeGraph {
             let matchingEventToken = null
 
 
-            if(debug){
+            if(this.logLevel=='debug'){
                 console.log(' knownEventTokens  ', knownEventTokens)
             }
 
@@ -394,7 +409,7 @@ export default class VibeGraph {
     
                  let inserted = await this.mongoInterface.insertOne('event_list', rawEvent)   
                     
-                 if(debug){
+                 if(this.logLevel=='debug'){
                     console.log('inserted new event', rawEvent , inserted ) 
                  }
                 
@@ -428,7 +443,7 @@ export default class VibeGraph {
 
         let newEventsArray = await this.mongoInterface.findAllWithLimit('event_list',{address: contractAddress, hasAffectedLedger: null }, 5000)
 
-        if(this.indexingConfig.logging && newEventsArray.length > 0){
+        if(this.logLevel=='debug' && newEventsArray.length > 0){
             console.log('update ledger: ', newEventsArray.length)
           }
 
@@ -477,8 +492,8 @@ export default class VibeGraph {
     }
 
 
-    async deleteDataForContract(contractAddress){
-        contractAddress = web3utils.toChecksumAddress(contractAddress)
+    async deleteDataForContract(contractAddress:string){
+        contractAddress = ethers.utils.getAddress(contractAddress)
 
         await this.mongoInterface.deleteMany('contract_state', {contractAddress: contractAddress})
         await this.mongoInterface.deleteMany('event_data', {contractAddress: contractAddress})
@@ -486,14 +501,14 @@ export default class VibeGraph {
     }
 
     async deleteIndexedData(){
-        await this.mongoInterface.deleteMany('erc20_balances' )
+      /*  await this.mongoInterface.deleteMany('erc20_balances' )
         await this.mongoInterface.deleteMany('erc20_approval' )
         await this.mongoInterface.deleteMany('erc20_transferred' )
         await this.mongoInterface.deleteMany('erc721_balances' )
         await this.mongoInterface.deleteMany('erc1155_balances' )
         await this.mongoInterface.deleteMany('erc20_burned' )
         await this.mongoInterface.deleteMany('offchain_signatures' )
-        await this.mongoInterface.deleteMany('nft_sale' )
+        await this.mongoInterface.deleteMany('nft_sale' )*/
 
         await this.mongoInterface.updateMany('event_list', {  }, {hasAffectedLedger: null })
     }
@@ -501,7 +516,7 @@ export default class VibeGraph {
 
     blockNumberIsStale(){
 
-        let updateBlockNumberRate = this.indexingConfig && this.indexingConfig.updateBlockNumberRate ? this.indexingConfig.updateBlockNumberRate : 60*1000
+        let updateBlockNumberRate = this.updateBlockNumberRate ? this.updateBlockNumberRate : 60*1000
 
         return !blocknumberUpdatedAt ||  ( Date.now() - blocknumberUpdatedAt )  > updateBlockNumberRate
     }
@@ -522,18 +537,18 @@ export default class VibeGraph {
         return undefined 
     }
 
-    async setParameterForContract(contractAddress, paramName, newValue){
+    async setParameterForContract(contractAddress:string, paramName:any, newValue:any){
         await this.mongoInterface.updateOne('contract_state', {contractAddress:contractAddress}, {[`${paramName}`]:newValue})
         
     }
 
-    async readParameterForContract(contractAddress, paramName){
+    async readParameterForContract(contractAddress:string, paramName:any){
         let contractState = await this.mongoInterface.findOne('contract_state', {contractAddress:contractAddress})
 
         return contractState[paramName]
     }
 
-    async getScaledCourseBlockGap(contractAddress){
+    async getScaledCourseBlockGap(contractAddress:string){
         let stepSizeScaleFactor = await this.readParameterForContract( contractAddress, 'stepSizeScaleFactor'  )
 
         return parseInt( this.indexingConfig.courseBlockGap / stepSizeScaleFactor )
@@ -543,7 +558,7 @@ export default class VibeGraph {
         
         if(!this.maxBlockNumber || this.blockNumberIsStale){
             this.maxBlockNumber = await this.fetchLatestBlockNumber( )
-            blocknumberUpdatedAt = Date.now(); 
+            this.blocknumberUpdatedAt = Date.now(); 
         }
 
         if(!this.maxBlockNumber){
@@ -560,9 +575,9 @@ export default class VibeGraph {
 
         let contractType =  await this.readParameterForContract(contractAddress , 'type')   //parseInt(this.currentIndexingBlock) 
 
-        let fineBlockGap = this.indexingConfig.fineBlockGap
+        let fineBlockGap = this.fineBlockGap
 
-        if(this.indexingConfig.logging){
+        if(this.logLevel=='debug'){
             console.log('index data starting at ', cIndexingBlock, contractAddress)
         }
         
@@ -639,7 +654,7 @@ export default class VibeGraph {
 
     }
 
-    async decreaseStepSizeScaleFactorForContract(contractAddress){
+    async decreaseStepSizeScaleFactorForContract(contractAddress:string){
         
         let oldFactor = await this.readParameterForContract(contractAddress, 'stepSizeScaleFactor')
         let newFactor  = Math.max(  parseInt(oldFactor / 2) , 1)
@@ -654,13 +669,13 @@ export default class VibeGraph {
     }
     
 
-    async incrementCurrentBlockNumberForContract(contractAddress, startBlock, blockGap){
+    async incrementCurrentBlockNumberForContract(contractAddress:string, startBlock:number, blockGap:number){
 
-        let newBlockNumber = startBlock + parseInt(blockGap)
+        let newBlockNumber = startBlock + parseInt(blockGap.toString())
 
         await this.setParameterForContract(contractAddress, 'currentIndexingBlock', newBlockNumber)
        
-         if(this.indexingConfig.logging){
+         if(this.logLevel=='debug'){
           console.log('currentIndexingBlock ',contractAddress , newBlockNumber)
         } 
 
@@ -686,7 +701,7 @@ export default class VibeGraph {
         }
         //need better error catch
 
-            if(this.indexingConfig.logging){
+            if(this.logLevel=='debug'){
                  
 
                 if(results && results.events && results.events.length == 0){
@@ -709,7 +724,7 @@ export default class VibeGraph {
 
             }else{
 
-                if(this.indexingConfig.logging){
+                if(this.logLevel=='debug'){
                     console.log('saved event data ', results.startBlock, ":", results.endBlock, ' Count: ' , results.events.length)
                 }
 
@@ -784,7 +799,7 @@ export default class VibeGraph {
    
 
 
-    async getContractEvents(contract, eventName, startBlock, endBlock  ){
+    async getContractEvents(contract:any, eventName:string, startBlock:number, endBlock:number ){
 
         
             return new Promise ((resolve, reject) => {
@@ -800,8 +815,10 @@ export default class VibeGraph {
 
  
 
-    async modifyLedgerForEventType(event, contractType){
-        let mongoInterface = this.mongoInterface
+    async modifyLedgerForEventType(event:any, contractType:string){
+       // let mongoInterface = this.mongoInterface
+
+
         contractType = contractType.toLowerCase()
 
         let indexer = this.getIndexerForContractType(contractType)
@@ -815,8 +832,9 @@ export default class VibeGraph {
             return {success:true } 
         }
 
-        try{ 
-            let result = await indexer.modifyLedgerByEvent(event,mongoInterface)
+        try{
+            //@ts-ignore
+            let result = await indexer.onEventEmitted(event)
 
             return {success:true, result: result} 
         }catch(e){
