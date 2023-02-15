@@ -4,8 +4,8 @@ import { Schema, Model, InferSchemaType, model, Require_id } from 'mongoose'
 export const ContractStateSchema = new Schema(
   {
     contractAddress: { type: String, required: true, index: true },
-    currentIndexingBlock: Number, 
-    type: String,
+    currentIndexingBlock: {type:Number, required:true}, 
+    type: {type:String, required:true },
     stepSizeScaleFactor: Number,
     synced: Boolean,
     lastUpdated: Number

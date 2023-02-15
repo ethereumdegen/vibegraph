@@ -98,7 +98,8 @@ export interface CustomIndexer {
     type:string 
 }
 
-
+const DEFAULT_FINE_BLOCK_GAP = 20
+const DEFAULT_COURSE_BLOCK_GAP = 8000
  
 
 export default class VibeGraph {
@@ -124,6 +125,7 @@ export default class VibeGraph {
     maxBlockNumber?:number 
 
     fineBlockGap?:number 
+    courseBlockGap?:number
 
     logLevel?:string = 'debug'
 
@@ -179,7 +181,8 @@ export default class VibeGraph {
         this.indexRate = indexingConfig.indexRate
         this.updateBlockNumberRate = indexingConfig.updateBlockNumberRate
             
-        this.fineBlockGap = indexingConfig.fineBlockGap
+        this.fineBlockGap = indexingConfig.fineBlockGap ? indexingConfig.fineBlockGap : DEFAULT_FINE_BLOCK_GAP
+        this.courseBlockGap = indexingConfig.courseBlockGap ? indexingConfig.courseBlockGap : DEFAULT_COURSE_BLOCK_GAP
     }
 
 
@@ -471,7 +474,13 @@ export default class VibeGraph {
         let contractData = this.contractsArray[this.ledgerContractIndex]
         let contractAddress =  contractData.address 
 
-        let contractType = await this.readParameterForContract(contractAddress, 'type')
+        let matchingContract = await this.getContractState(contractAddress)
+
+        if(!matchingContract){
+            throw new Error(`Could not find contract state for ${contractAddress}`)
+        }
+
+        let contractType = matchingContract.type // await this.readParameterForContract(contractAddress, 'type')
  
 
         let newEventsArray = await EventList.find({address: contractAddress, hasAffectedLedger: null }).limit(5000)
@@ -554,9 +563,16 @@ export default class VibeGraph {
 
 
     async fetchLatestBlockNumber(){
+
+        let rpcProvider = this.rpcProvider 
+        
+        if(!rpcProvider) {
+            console.error("Could not fetch block number: RPC Provider undefined")
+            return undefined
+        } 
          
-        try{ 
-            let latestBlockNumber = await getBlockNumber(this.rpcProvider)            
+        try{
+            let latestBlockNumber = await getBlockNumber(rpcProvider)            
 
             return latestBlockNumber
         }catch(e){
@@ -572,23 +588,32 @@ export default class VibeGraph {
         
     }
 
-    async readParameterForContract(contractAddress:string, paramName:any){
+    async getContractState(contractAddress:string ) : Promise<IContractState | null> {
 
-        let contractState = await ContractState.findOne(  {contractAddress:contractAddress} )
+        let contractState:IContractState | null = await ContractState.findOne(  {contractAddress:contractAddress} )
         //await this.mongoInterface.findOne('contract_state', {contractAddress:contractAddress})
 
-        return contractState[paramName]
+        return contractState//[paramName]
     }
 
     async getScaledCourseBlockGap(contractAddress:string){
-        let stepSizeScaleFactor = await this.readParameterForContract( contractAddress, 'stepSizeScaleFactor'  )
+        
+        let matchingContract = await this.getContractState(contractAddress)
 
-        return parseInt( this.courseBlockGap / stepSizeScaleFactor )
+        if(!matchingContract){
+            throw new Error(`Could not find contract state for ${contractAddress}`)
+        }
+
+        let stepSizeScaleFactor = matchingContract.stepSizeScaleFactor ? matchingContract.stepSizeScaleFactor : 1 //await this.readParameterForContract( contractAddress, 'stepSizeScaleFactor'  )
+
+        let courseBlockGap = this.courseBlockGap ? this.courseBlockGap : DEFAULT_COURSE_BLOCK_GAP
+
+        return  ( courseBlockGap / stepSizeScaleFactor )
     }
 
     async indexData(){    
         
-        if(!this.maxBlockNumber || this.blockNumberIsStale){
+        if(!this.maxBlockNumber || this.blockNumberIsStale()){
             this.maxBlockNumber = await this.fetchLatestBlockNumber( )
             this.blocknumberUpdatedAt = Date.now(); 
         }
@@ -603,11 +628,17 @@ export default class VibeGraph {
 
         var madeApiRequest = false;
 
-        let cIndexingBlock =  await this.readParameterForContract(contractAddress , 'currentIndexingBlock')   //parseInt(this.currentIndexingBlock) 
+        let matchingContract = await this.getContractState(contractAddress)
 
-        let contractType =  await this.readParameterForContract(contractAddress , 'type')   //parseInt(this.currentIndexingBlock) 
+        if(!matchingContract){
+            throw new Error(`Could not find contract state for ${contractAddress}`)
+        }
 
-        let fineBlockGap = this.fineBlockGap
+        let cIndexingBlock = matchingContract.currentIndexingBlock // await this.readParameterForContract(contractAddress , 'currentIndexingBlock')   //parseInt(this.currentIndexingBlock) 
+
+        let contractType = matchingContract.type //await this.readParameterForContract(contractAddress , 'type')   //parseInt(this.currentIndexingBlock) 
+
+        let fineBlockGap = this.fineBlockGap ? this.fineBlockGap : DEFAULT_FINE_BLOCK_GAP
 
         if(this.logLevel=='debug'){
             console.log('index data starting at ', cIndexingBlock, contractAddress)
@@ -622,7 +653,7 @@ export default class VibeGraph {
             let contractABI = this.getABIFromType(contractType)
             let rpcProvider = this.rpcProvider 
 
-            await this.indexContractData( contractAddress, contractABI, rpcProvider, cIndexingBlock, scaledCourseBlockGap  )
+             await this.indexContractData( contractAddress, contractABI, rpcProvider, cIndexingBlock, scaledCourseBlockGap  )
             
             
     
@@ -633,7 +664,7 @@ export default class VibeGraph {
 
         }else if( cIndexingBlock + fineBlockGap < this.maxBlockNumber ){
 
-            let remainingBlockGap = parseInt(this.maxBlockNumber - cIndexingBlock -  1)
+            let remainingBlockGap =  (this.maxBlockNumber - cIndexingBlock -  1)
 
 
             let contractABI = this.getABIFromType(contractType) 
@@ -678,8 +709,14 @@ export default class VibeGraph {
     //fix me , save to mongo 
     async increaseStepSizeScaleFactorForContract(contractAddress:string){
 
-        let oldFactor = await this.readParameterForContract(contractAddress, 'stepSizeScaleFactor')
-        let newFactor  = parseInt(oldFactor * 2)
+        let matchingContract = await this.getContractState(contractAddress)
+
+        if(!matchingContract){
+            throw new Error(`Could not find contract state for ${contractAddress}`)
+        }
+
+        let oldFactor = matchingContract.stepSizeScaleFactor ? matchingContract.stepSizeScaleFactor : 1
+        let newFactor  =  (oldFactor * 2)
 
         await this.setParameterForContract(contractAddress, 'stepSizeScaleFactor', newFactor)
 
@@ -690,9 +727,15 @@ export default class VibeGraph {
     }
 
     async decreaseStepSizeScaleFactorForContract(contractAddress:string){
-        
-        let oldFactor = await this.readParameterForContract(contractAddress, 'stepSizeScaleFactor')
-        let newFactor  = Math.max(  parseInt(oldFactor / 2) , 1)
+
+        let matchingContract = await this.getContractState(contractAddress)
+
+        if(!matchingContract){
+            throw new Error(`Could not find contract state for ${contractAddress}`)
+        }
+
+        let oldFactor = matchingContract.stepSizeScaleFactor ? matchingContract.stepSizeScaleFactor : 1 //await this.readParameterForContract(contractAddress, 'stepSizeScaleFactor')
+        let newFactor  = Math.max(   (oldFactor / 2) , 1)
 
        // this.stepSizeScaleFactor  = Math.max(  parseInt(this.stepSizeScaleFactor / 2) , 1)
 
@@ -851,9 +894,13 @@ export default class VibeGraph {
 
  
 
-    async triggerOnEventEmitted(event:any, contractType:string){
+    async triggerOnEventEmitted(event:any, contractType?:string){
        // let mongoInterface = this.mongoInterface
 
+       if(!contractType){
+        console.error('Unable to trigger onEventEmitted for ', event)
+        return
+       }
 
         contractType = contractType.toLowerCase()
 
