@@ -1,9 +1,10 @@
-# VibeGraph
-Data collection bot for Web3 events such as Transfer/Approval events of ERC20 and ERC721 tokens.  Similar to subgraph but opensource and lightweight.
-
-!VIBE 🐸
+# VibeGraph 🐸
+Ethereum event indexing collection service for Web3 events such as Transfer/Approval events of ERC20 and ERC721 tokens.  An opensource and lightweight alternative to Subgraph/TheGraph.
 
 
+![image](https://user-images.githubusercontent.com/6249263/218893132-89721ace-a86a-4d57-8924-773eedf4fa52.png)
+
+!VIBE 
 
 #### Try it out 
 
