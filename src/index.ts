@@ -26,6 +26,7 @@ import VibegraphIndexer from '../indexers/VibegraphIndexer'
 import {ContractState, IContractState} from '../models/contract_state'
 
 import {EventList, IEventList} from '../models/event_list'
+import {EventData, IEventData} from '../models/event_data'
 
 /*
  TODO: should convert this to typescript with well defined types 
@@ -473,7 +474,8 @@ export default class VibeGraph {
         let contractType = await this.readParameterForContract(contractAddress, 'type')
  
 
-        let newEventsArray = await this.mongoInterface.findAllWithLimit('event_list',{address: contractAddress, hasAffectedLedger: null }, 5000)
+        let newEventsArray = await EventList.find({address: contractAddress, hasAffectedLedger: null }).limit(5000)
+        // = await this.mongoInterface.findAllWithLimit('event_list',{address: contractAddress, hasAffectedLedger: null }, 5000)
 
         if(this.logLevel=='debug' && newEventsArray.length > 0){
             console.log('update ledger: ', newEventsArray.length)
@@ -481,10 +483,10 @@ export default class VibeGraph {
 
         for(let event of newEventsArray){
 
-            let modify = await this.modifyLedgerForEventType(event, contractType)
+            let modify = await this.triggerOnEventEmitted(event, contractType)
 
-            
-            await this.mongoInterface.updateOne('event_list', {_id: event._id }, {hasAffectedLedger: true })
+            await EventList.updateOne( {_id: event._id }, {hasAffectedLedger: true } )
+          //  await this.mongoInterface.updateOne('event_list', {_id: event._id }, {hasAffectedLedger: true })
         }
 
         if(this.onIndexCallback && newEventsArray && newEventsArray.length > 0){
@@ -570,12 +572,15 @@ export default class VibeGraph {
     }
 
     async setParameterForContract(contractAddress:string, paramName:any, newValue:any){
-        await this.mongoInterface.updateOne('contract_state', {contractAddress:contractAddress}, {[`${paramName}`]:newValue})
+        await ContractState.updateOne(  {contractAddress:contractAddress}, {[`${paramName}`]:newValue} )
+     //   await this.mongoInterface.updateOne('contract_state', {contractAddress:contractAddress}, {[`${paramName}`]:newValue})
         
     }
 
     async readParameterForContract(contractAddress:string, paramName:any){
-        let contractState = await this.mongoInterface.findOne('contract_state', {contractAddress:contractAddress})
+
+        let contractState = await ContractState.findOne(  {contractAddress:contractAddress} )
+        //await this.mongoInterface.findOne('contract_state', {contractAddress:contractAddress})
 
         return contractState[paramName]
     }
@@ -583,7 +588,7 @@ export default class VibeGraph {
     async getScaledCourseBlockGap(contractAddress:string){
         let stepSizeScaleFactor = await this.readParameterForContract( contractAddress, 'stepSizeScaleFactor'  )
 
-        return parseInt( this.indexingConfig.courseBlockGap / stepSizeScaleFactor )
+        return parseInt( this.courseBlockGap / stepSizeScaleFactor )
     }
 
     async indexData(){    
@@ -638,6 +643,9 @@ export default class VibeGraph {
 
             let contractABI = this.getABIFromType(contractType) 
             let rpcProvider = this.rpcProvider 
+
+            if(!rpcProvider) throw new Error("Undefined rpc provider")
+
             await this.indexContractData( contractAddress, contractABI, rpcProvider, cIndexingBlock, remainingBlockGap  )
          
           
@@ -761,7 +769,8 @@ export default class VibeGraph {
                 }
 
                 //save in mongo  
-                let existingEventData = await this.mongoInterface.findOne('event_data', {contractAddress: results.contractAddress, startBlock: results.startBlock })
+                let existingEventData = await EventData.findOne( {contractAddress: results.contractAddress, startBlock: results.startBlock } )
+                //await this.mongoInterface.findOne('event_data', {contractAddress: results.contractAddress, startBlock: results.startBlock })
                 if(!existingEventData){
 
                     //reduce storage size 
@@ -847,7 +856,7 @@ export default class VibeGraph {
 
  
 
-    async modifyLedgerForEventType(event:any, contractType:string){
+    async triggerOnEventEmitted(event:any, contractType:string){
        // let mongoInterface = this.mongoInterface
 
 
