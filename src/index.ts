@@ -25,6 +25,8 @@ import VibegraphIndexer from '../indexers/VibegraphIndexer'
 
 import {ContractState, IContractState} from '../models/contract_state'
 
+import {EventList, IEventList} from '../models/event_list'
+
 /*
  TODO: should convert this to typescript with well defined types 
 */
@@ -108,7 +110,7 @@ export default class VibeGraph {
 
     blocknumberUpdatedAt?:number 
 
-
+    ledgerContractIndex?:number 
 
     contractsArray:ContractConfig[] = []
     customIndexersArray:CustomIndexer[] = []  
@@ -123,6 +125,8 @@ export default class VibeGraph {
     fineBlockGap?:number 
 
     logLevel?:string = 'debug'
+
+
 
  /*
     var customIndexersArray = []
@@ -218,7 +222,7 @@ export default class VibeGraph {
     async startIndexing(   ){
  
         if(this.subscribe){             
-            this.subscribeToEvents( )           
+            this.subscribeAllToEvents( )           
         } 
   
         this.indexingLoop = new SingletonLoopMethod(  this.indexData.bind(this) )
@@ -337,55 +341,80 @@ export default class VibeGraph {
 
     
 
-    subscribeToEvents(   ){
+    subscribeAllToEvents(   ){
 
         let contractsArray = this.contractsArray  
 
-        let knownEventTokens = []
+        let knownEventTokens:any[] = []
 
         for(let contractData of contractsArray){ 
 
             let contractABI = this.getABIFromType(contractData.type) 
             let contractAddress = contractData.address
 
-            let myContract =  new this.web3.eth.Contract( contractABI , contractAddress   )
+            let myContract =  new ethers.Contract( contractAddress, contractABI )
 
-            let contractEventTokens = myContract.options.jsonInterface.filter((token) => {
+            let contractEventTokens = myContract.options.jsonInterface.filter((token:any) => {
                 return token.type === 'event';
               });
             
-            knownEventTokens = knownEventTokens.concat(contractEventTokens)
+         //   knownEventTokens = knownEventTokens.concat(contractEventTokens)
 
-            //this.subscribeToEvents( contractData.address, contractABI )
+            this.subscribeToEvents( contractData.address, contractABI, contractEventTokens, this.rpcProvider )
         }
-         
       
-        let contractAddresses = contractsArray.map(contract => contract.address)
+      
+    //    let contractAddresses = contractsArray.map(contract => contract.address)
         
         
+       /* 
+
+        console.log('subscribing to logs ', options)
+*/
+     
+
+      /*  let subscription = this.web3.eth.subscribe('logs', options,(err,event) => {
+            if (err) console.error(err)
+             
+        });*/
+
+       
+       // subscription.on('data', async (rawEvent) =>  {
+
+      
+    }
+
+
+    async subscribeToEvents(
+        contractAddress:string,
+        contractABI:ethers.ContractInterface,
+        eventTokens: any[],
+        rpcProvider?:ethers.providers.Provider
+        ){
+  
+        if(!rpcProvider) return ;
+
         let options = { 
-            address: contractAddresses     //Only get events from specific addresses 
+            address: contractAddress     //Only get events from specific addresses 
         };
 
         console.log('subscribing to logs ', options)
-        
-        let subscription = this.web3.eth.subscribe('logs', options,(err,event) => {
-            if (err) console.error(err)
-             
-        });
+         
+ 
 
-       
-        subscription.on('data', async (rawEvent) =>  {
+            //make sure this works !!
+        let subscription = rpcProvider.on(options ,  async (rawEvent) =>  {
+
 
              
             let matchingEventToken = null
 
 
             if(this.logLevel=='debug'){
-                console.log(' knownEventTokens  ', knownEventTokens)
+                console.log(' eventTokens  ', eventTokens)
             }
 
-            for(let eventToken of knownEventTokens){
+            for(let eventToken of eventTokens){
                 if( rawEvent.topics[0] ==  eventToken.signature ){
                     matchingEventToken = eventToken 
                     break 
@@ -394,8 +423,10 @@ export default class VibeGraph {
 
             if(matchingEventToken){
 
-               
-                const outputs = this.web3.eth.abi.decodeLog(
+                
+                //https://github.com/ethers-io/ethers.js/issues/422
+
+                const outputs = ethers.utils.defaultAbiCoder.decode(
                     matchingEventToken.inputs,
                     rawEvent.data,
                     rawEvent.topics.slice(1)
@@ -406,8 +437,8 @@ export default class VibeGraph {
                  rawEvent.returnValues = outputs 
 
                  
-    
-                 let inserted = await this.mongoInterface.insertOne('event_list', rawEvent)   
+                let inserted = EventList.create(rawEvent)
+                // let inserted = await this.mongoInterface.insertOne('event_list', rawEvent)   
                     
                  if(this.logLevel=='debug'){
                     console.log('inserted new event', rawEvent , inserted ) 
@@ -424,6 +455,7 @@ export default class VibeGraph {
         subscription.on('changed', (changed:any) => console.log(changed))
         subscription.on('error', (err:any) => { throw err })
         subscription.on('connected', (nr:any) => console.log(nr)) 
+
 
     }
 
@@ -455,8 +487,8 @@ export default class VibeGraph {
             await this.mongoInterface.updateOne('event_list', {_id: event._id }, {hasAffectedLedger: true })
         }
 
-        if(onIndexCallback && newEventsArray && newEventsArray.length > 0){
-            onIndexCallback()
+        if(this.onIndexCallback && newEventsArray && newEventsArray.length > 0){
+            this.onIndexCallback()
         }
 
         this.ledgerContractIndex = this.ledgerContractIndex +1
@@ -615,13 +647,13 @@ export default class VibeGraph {
              
             madeApiRequest = true;
 
-            if(this.indexingConfig.logging){
+            if(this.logLevel=='debug'){
                 console.log('resynchronizing: ', cIndexingBlock, contractAddress)
             }
      
         }else{
 
-            if(this.indexingConfig.logging){
+            if(this.logLevel=='debug'){
                 console.log('synchronized: ', cIndexingBlock, contractAddress)
             }
             
@@ -641,14 +673,14 @@ export default class VibeGraph {
     }
 
     //fix me , save to mongo 
-    async increaseStepSizeScaleFactorForContract(contractAddress){
+    async increaseStepSizeScaleFactorForContract(contractAddress:string){
 
         let oldFactor = await this.readParameterForContract(contractAddress, 'stepSizeScaleFactor')
         let newFactor  = parseInt(oldFactor * 2)
 
         await this.setParameterForContract(contractAddress, 'stepSizeScaleFactor', newFactor)
 
-        if(this.indexingConfig.logging){
+        if(this.logLevel=='debug'){
             console.log('ScaleFactor ',contractAddress,newFactor)
         }
 
@@ -663,7 +695,7 @@ export default class VibeGraph {
 
         await this.setParameterForContract(contractAddress, 'stepSizeScaleFactor', newFactor)
 
-        if(this.indexingConfig.logging){
+        if(this.logLevel=='debug'){
             console.log('ScaleFactor ',contractAddress,newFactor)
         }
     }
