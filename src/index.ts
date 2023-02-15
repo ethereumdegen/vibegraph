@@ -304,9 +304,9 @@ export default class VibeGraph {
                 stepSizeScaleFactor: 1,
                 synced: false,
                 lastUpdated: Date.now()
-                 }   
+                }   
 
-            const created = await ContractState.create( newState )
+                const created = await ContractState.create( newState )
              
             } 
 

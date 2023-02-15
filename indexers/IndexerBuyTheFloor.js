@@ -17,7 +17,7 @@ module.exports =  class IndexerBuyTheFloor extends VibegraphIndexer{
 
     }
 
-    async modifyLedgerByEvent(event){
+    async onEventEmitted(event){
 
         await IndexerBuyTheFloor.modifyBuyTheFloorLedgerByEvent(event,this.mongoInterface)
 

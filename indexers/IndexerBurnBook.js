@@ -16,7 +16,7 @@ module.exports =  class IndexerBurnBook extends VibegraphIndexer{
     }
 
 
-    async modifyLedgerByEvent(event){
+    async onEventEmitted(event){
 
         await IndexerBurnBook.modifyBurnBookLedgerByEvent(event,this.mongoInterface)
 

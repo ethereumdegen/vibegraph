@@ -16,7 +16,7 @@ module.exports =  class IndexerERC1155 extends VibegraphIndexer{
       
     }
 
-    async modifyLedgerByEvent(event){
+    async onEventEmitted(event){
 
         await IndexerERC1155.modifyERC1155LedgerByEvent(event,this.mongoInterface)
 
