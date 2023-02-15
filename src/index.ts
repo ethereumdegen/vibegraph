@@ -12,7 +12,7 @@ import { ethers } from "ethers";
 
 import mongoose from 'mongoose'
 
-import {getCustomContract} from './lib/web3-helper'
+import {getBlockNumber, getCustomContract} from './lib/web3-helper'
 
 //const MongoInterface = require('./lib/mongo-interface')
 //const Web3Helper = require('./lib/web3-helper')
@@ -518,33 +518,30 @@ export default class VibeGraph {
    
 
     async resetState(){
-        let deleted = await this.mongoInterface.deleteMany('contract_state', {})
+        let deleted = await ContractState.deleteMany( {})
     }
 
     async dropDatabase(){
-        let deleted = await this.mongoInterface.dropDatabase( )
+        
+        await ContractState.deleteMany({})
+        await EventData.deleteMany({})
+        await EventList.deleteMany({})
     }
 
 
     async deleteDataForContract(contractAddress:string){
         contractAddress = ethers.utils.getAddress(contractAddress)
 
-        await this.mongoInterface.deleteMany('contract_state', {contractAddress: contractAddress})
-        await this.mongoInterface.deleteMany('event_data', {contractAddress: contractAddress})
-        await this.mongoInterface.deleteMany('event_list', {address: contractAddress})
+        
+        await ContractState.deleteMany({contractAddress: contractAddress})
+        await EventData.deleteMany({contractAddress: contractAddress})
+        await EventList.deleteMany({address: contractAddress})
     }
 
     async deleteIndexedData(){
-      /*  await this.mongoInterface.deleteMany('erc20_balances' )
-        await this.mongoInterface.deleteMany('erc20_approval' )
-        await this.mongoInterface.deleteMany('erc20_transferred' )
-        await this.mongoInterface.deleteMany('erc721_balances' )
-        await this.mongoInterface.deleteMany('erc1155_balances' )
-        await this.mongoInterface.deleteMany('erc20_burned' )
-        await this.mongoInterface.deleteMany('offchain_signatures' )
-        await this.mongoInterface.deleteMany('nft_sale' )*/
-
-        await this.mongoInterface.updateMany('event_list', {  }, {hasAffectedLedger: null })
+      
+        await EventList.updateMany({},{hasAffectedLedger:null})
+        
     }
 
 
@@ -552,16 +549,14 @@ export default class VibeGraph {
 
         let updateBlockNumberRate = this.updateBlockNumberRate ? this.updateBlockNumberRate : 60*1000
 
-        return !blocknumberUpdatedAt ||  ( Date.now() - blocknumberUpdatedAt )  > updateBlockNumberRate
+        return !this.blocknumberUpdatedAt ||  ( Date.now() - this.blocknumberUpdatedAt )  > updateBlockNumberRate
     }
 
 
     async fetchLatestBlockNumber(){
          
         try{ 
-            let latestBlockNumber = await Web3Helper.getBlockNumber(this.web3)
-
-            
+            let latestBlockNumber = await getBlockNumber(this.rpcProvider)            
 
             return latestBlockNumber
         }catch(e){
