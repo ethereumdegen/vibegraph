@@ -1,4 +1,4 @@
-import { Schema, Model, InferSchemaType, model, Require_id } from 'mongoose'
+import mongoose, { Schema, Model, InferSchemaType, model, Require_id } from 'mongoose'
  
 /*
 what is this used for ? 
@@ -13,6 +13,8 @@ export const EventDataSchema = new Schema(
   } 
 )
   
+mongoose.pluralize(null);
+
 export type IEventData = Require_id<
   InferSchemaType<typeof EventDataSchema>
 > 

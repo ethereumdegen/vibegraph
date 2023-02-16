@@ -1,4 +1,4 @@
-import { Schema, Model, InferSchemaType, model, Require_id } from 'mongoose'
+import mongoose, { Schema, Model, InferSchemaType, model, Require_id } from 'mongoose'
  
 
 export const ContractStateSchema = new Schema(
@@ -13,6 +13,9 @@ export const ContractStateSchema = new Schema(
 )
  
 //ContractStateSchema.index({ contractAddress: 1, tokenId: 1 }, { unique: true })
+
+
+mongoose.pluralize(null);
 
 export type IContractState = Require_id<
   InferSchemaType<typeof ContractStateSchema>

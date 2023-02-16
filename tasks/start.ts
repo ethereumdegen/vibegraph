@@ -29,9 +29,9 @@ let EnsRegistryABI = require( '../config/contracts/ENSRegistrarController.json' 
                     ],
              
             dbName:"vibegraph_dev",
-            indexRate: 10*1000,
+            indexRate: 1*1000,
             courseBlockGap: 8000,
-            updateBlockNumberRate: 2000,
+            updateBlockNumberRate: 60*1000,
             fineBlockGap: 20,
             logLevel:'debug',
             subscribe: false, 

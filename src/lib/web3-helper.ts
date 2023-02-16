@@ -19,11 +19,9 @@ const networkIds = {
 
 
     export async function getBlockNumber(provider: ethers.providers.Provider){
-        console.log('getting block number 1', provider)
+        
         let blockNumber = await provider.getBlockNumber() 
-
-        console.log('getting block number 2')
-        console.log({blockNumber})
+ 
 
         return blockNumber
     }

@@ -1,18 +1,19 @@
-import { Schema, Model, InferSchemaType, model, Require_id } from 'mongoose'
+import mongoose, { Schema, Model, InferSchemaType, model, Require_id } from 'mongoose'
  
 
 export const EventListSchema = new Schema(
   {
-    event:String ,
-    address:String,
+    name:{type:String,required:true},
+    address:{type:String,required:true},
     blockHash:String,
-    blockNumber:Number,
+    blockNumber:{type:Number,required:true},
     logIndex:Number,
     removed:Boolean,
     transactionHash:String,
     transactionIndex:Number,
     id:String,
-    returnValues: Object, 
+    //returnValues: Object, 
+    args: Object,
     signature:String,
     raw:Object,
     hasAffectedLedger:Boolean,
@@ -20,6 +21,8 @@ export const EventListSchema = new Schema(
 
   } 
 )
+
+mongoose.pluralize(null);
   
 export type IEventList = Require_id<
   InferSchemaType<typeof EventListSchema>

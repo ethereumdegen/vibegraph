@@ -27,6 +27,7 @@ import {ContractState, IContractState} from '../models/contract_state'
 
 import {EventList, IEventList} from '../models/event_list'
 import {EventData, IEventData} from '../models/event_data'
+import { Interface } from "ethers/lib/utils";
 
 /*
  TODO: should convert this to typescript with well defined types 
@@ -104,11 +105,31 @@ const DEFAULT_COURSE_BLOCK_GAP = 8000
  
 
 
+export interface ContractEventRaw{
+    blockNumber:number 
+    blockHash:string 
+    transactionIndex:number 
+    address:string 
+    data:string 
+    topics:string[]
+    transactionHash: string 
+    logIndex:number
+  }
+
 export interface ContractEvent{
+    name:string 
+    signature: string 
+    args: Object 
+
+    address:string 
+    data:string 
+    transactionHash:string 
+    blockNumber:number 
+    blockHash:string 
+
 
 
 }
-
 export default class VibeGraph {
 
     currentContractIndex:number = 0 
@@ -275,7 +296,7 @@ export default class VibeGraph {
     }
 
     
-     getABIFromType(type:string){
+     getABIFromType(type:string) : ethers.utils.Interface {
         type = type.toLowerCase()
 
 
@@ -284,7 +305,8 @@ export default class VibeGraph {
          
         for(let indexer of this.customIndexersArray){
             if(type == indexer.type.toLowerCase()){
-                return indexer.abi
+               //     console.log('meep',JSON.stringify(indexer.abi))
+                return new ethers.utils.Interface(JSON.stringify(indexer.abi))
             }
         }
         
@@ -440,7 +462,9 @@ export default class VibeGraph {
             if(matchingEventToken){
 
                 
-                //https://github.com/ethers-io/ethers.js/issues/422
+                //https://github.com/ethers-io/ethers.js/issues/422 
+
+                //fix me !!
 
                 const outputs = ethers.utils.defaultAbiCoder.decode(
                     matchingEventToken.inputs,
@@ -449,7 +473,7 @@ export default class VibeGraph {
                   ) 
      
 
-                 rawEvent.event = matchingEventToken.name 
+                 rawEvent.name = matchingEventToken.name 
                  rawEvent.returnValues = outputs 
 
                  
@@ -627,8 +651,7 @@ export default class VibeGraph {
         
         if(!this.maxBlockNumber || this.blockNumberIsStale()){
             this.maxBlockNumber = await this.fetchLatestBlockNumber( )
-            
-            console.log('meep',this.maxBlockNumber)
+             
            
             this.blocknumberUpdatedAt = Date.now(); 
         }
@@ -663,7 +686,7 @@ export default class VibeGraph {
 
 
        
-        if(cIndexingBlock + scaledCourseBlockGap < this.maxBlockNumber){
+        if(cIndexingBlock + Math.floor(scaledCourseBlockGap ) < this.maxBlockNumber){
             
             let contractABI = this.getABIFromType(contractType)
             let rpcProvider = this.rpcProvider 
@@ -784,7 +807,7 @@ export default class VibeGraph {
 
 
 
-    async indexContractData(  contractAddress:string, contractABI:ethers.ContractInterface, rpcProvider: ethers.providers.Provider, startBlock:number, blockGap:number ){
+    async indexContractData(  contractAddress:string, contractABI:ethers.utils.Interface, rpcProvider: ethers.providers.Provider, startBlock:number, blockGap:number ){
 
 
 
@@ -792,10 +815,10 @@ export default class VibeGraph {
         
         var insertedMany; 
           
-         let endBlock = startBlock + Math.max(blockGap - 1 , 1)     
+         let endBlock = startBlock + Math.max(Math.ceil(blockGap) - 1 , 1)     
 
         try{
-            var results = await this.getContractEvents( contract, "allEvents", startBlock, endBlock )
+            var results = await this.getContractEvents(contractAddress, contractABI, startBlock, endBlock, rpcProvider )
         }catch(resultsError){ 
           
             await this.increaseStepSizeScaleFactorForContract( contractAddress  )  
@@ -826,19 +849,19 @@ export default class VibeGraph {
             }else{
 
                 if(this.logLevel=='debug'){
-                    console.log('saved event data ', results.startBlock, ":", results.endBlock, ' Count: ' , results.events.length)
+                    console.log('saved event data ', results.fromBlock, ":", results.toBlock, ' Count: ' , results.events.length)
                 }
 
                 //save in mongo  
-                let existingEventData = await EventData.findOne( {contractAddress: results.contractAddress, startBlock: results.startBlock } )
+                let existingEventData = await EventData.findOne( {contractAddress: results.contractAddress, startBlock: results.fromBlock } )
                 //await this.mongoInterface.findOne('event_data', {contractAddress: results.contractAddress, startBlock: results.startBlock })
                 if(!existingEventData){
 
                     //reduce storage size 
                     let newEventData:Omit<IEventData,'_id'> = {
                         contractAddress: results.contractAddress, 
-                        startBlock: results.startBlock ,
-                        endBlock: results.endBlock,
+                        startBlock: results.fromBlock ,
+                        endBlock: results.toBlock,
                         eventsCount: results.events.length 
                         //and some other stuff ?
                     }
@@ -850,11 +873,13 @@ export default class VibeGraph {
                     if(results.events && results.events.length > 0){ 
                         
 
-                        let eventsToLog = results.events.filter((evt:any) => ( evt.event != null )  )
+                        let eventsToLog = results.events.filter((evt:any) => ( evt.name != null )  )
 
                         if(eventsToLog && eventsToLog.length > 0 ){
                             try{ 
                                 let options = {ordered: false}
+
+                              //  console.log('inserting',JSON.stringify(eventsToLog))
 
                                 insertedMany = await EventList.insertMany( eventsToLog, options  )
                               //   insertedMany = await this.mongoInterface.insertMany('event_list', eventsToLog /* results.events*/, options  )
@@ -863,7 +888,7 @@ export default class VibeGraph {
                             }
                         }
 
-                        let erroredEvents = results.events.filter((evt:any) => ( !evt.event )  )
+                        let erroredEvents = results.events.filter((evt:any) => ( !evt.name )  )
                         if(erroredEvents && erroredEvents.length >0){
                             console.log('Could not insert events: ', JSON.stringify(erroredEvents))
                         }
@@ -897,18 +922,69 @@ export default class VibeGraph {
    
 
 
-    async getContractEvents(contract:any, eventName:string, startBlock:number, endBlock:number )
+    async getContractEvents(
+        contractAddress:string, contractABI:ethers.utils.Interface, fromBlock:number, toBlock:number, provider:ethers.providers.Provider )
     :Promise<{
         contractAddress:string,
-        startBlock:number,
-        endBlock:number,
+        fromBlock:number,
+        toBlock:number,
         events:ContractEvent[]
     
     }>{
 
         
-            return new Promise ((resolve, reject) => {
-                contract.getPastEvents(eventName, { fromBlock: startBlock, toBlock: endBlock }) 
+            let rawEvents:ContractEventRaw[] = await new Promise ((resolve, reject) => {
+
+                provider.getLogs(
+                    {
+                        fromBlock ,
+                        toBlock,
+                        address: contractAddress,
+                    //    topics: IssueEvent.topics
+                    }
+                ).then(function(events:ContractEventRaw[]){
+                    resolve(events) // same results as the optional callback above
+                }).catch(function(error:any){reject(error)});
+            })
+
+            // const logData = IssueEvent.parse(log.topics, log.data);
+                
+            
+             
+                const decodedEvents: ContractEvent[] = rawEvents.map( (evt:ContractEventRaw) => {
+                       
+                    
+                    const decodeResult =   contractABI.parseLog( evt )
+
+                       
+                    return {
+                       name: decodeResult.name,
+                       signature: decodeResult.signature,
+                       args: decodeResult.args,
+
+                       address:evt.address,
+                       data: evt.data,
+                       transactionHash: evt.transactionHash, 
+                       blockNumber: evt.blockNumber ,
+                       blockHash: evt.blockHash 
+                        
+                    }
+
+                   }
+                        
+                        
+                ) 
+
+
+            
+                return  {
+                    contractAddress ,
+                    fromBlock, 
+                    toBlock, 
+                     events: decodedEvents
+                    }
+
+             /*   contract.getPastEvents(eventName, { fromBlock: startBlock, toBlock: endBlock }) 
                 .then(function(events:ContractEvent[]){
                     resolve({
                         contractAddress: contract.options.address ,
@@ -916,7 +992,9 @@ export default class VibeGraph {
                          endBlock: endBlock, 
                          events:events}) // same results as the optional callback above
                 }).catch(function(error:any){reject(error)});
-            })
+                
+            })*/
+        
          
  
 
@@ -938,7 +1016,7 @@ export default class VibeGraph {
 
 
 
-        let eventName = event.event 
+        let eventName = event.name 
         if(!eventName){
  
             console.log('WARN: unknown event in ', event.transactionHash )
