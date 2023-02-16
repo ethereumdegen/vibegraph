@@ -18,9 +18,14 @@ const networkIds = {
     }
 
 
-    export async function  getBlockNumber(provider: ethers.providers.Provider){
-       // console.log('get block number ')
-        return await provider.getBlockNumber() 
+    export async function getBlockNumber(provider: ethers.providers.Provider){
+        console.log('getting block number 1', provider)
+        let blockNumber = await provider.getBlockNumber() 
+
+        console.log('getting block number 2')
+        console.log({blockNumber})
+
+        return blockNumber
     }
     
     export function getCustomContract(   contractAddress:string, contractABI:ethers.ContractInterface, provider?:ethers.providers.Provider)

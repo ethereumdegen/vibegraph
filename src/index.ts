@@ -193,6 +193,7 @@ export default class VibeGraph {
         this.courseBlockGap = indexingConfig.courseBlockGap ? indexingConfig.courseBlockGap : DEFAULT_COURSE_BLOCK_GAP
 
         this.logLevel = indexingConfig.logLevel
+        
     }
 
 
@@ -207,6 +208,7 @@ export default class VibeGraph {
             throw new Error("Vibegraph prepIndexing: Must specify a web3ProviderUri in config")
         }
 
+       
         this.rpcProvider = new ethers.providers.JsonRpcProvider( indexingConfig.web3ProviderUri );
         //this.web3 = new Web3( indexingConfig.web3ProviderUri )
 
@@ -572,7 +574,7 @@ export default class VibeGraph {
     }
 
 
-    async fetchLatestBlockNumber(){
+    async fetchLatestBlockNumber(){ 
 
         let rpcProvider = this.rpcProvider 
         
@@ -581,7 +583,7 @@ export default class VibeGraph {
             return undefined
         } 
          
-        try{
+        try{ 
             let latestBlockNumber = await getBlockNumber(rpcProvider)            
 
             return latestBlockNumber
@@ -625,6 +627,9 @@ export default class VibeGraph {
         
         if(!this.maxBlockNumber || this.blockNumberIsStale()){
             this.maxBlockNumber = await this.fetchLatestBlockNumber( )
+            
+            console.log('meep',this.maxBlockNumber)
+           
             this.blocknumberUpdatedAt = Date.now(); 
         }
 
