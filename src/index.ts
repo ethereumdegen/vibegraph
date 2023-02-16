@@ -76,6 +76,7 @@ export interface IndexingConfig {
     courseBlockGap:number 
     fineBlockGap:number 
     subscribe?:boolean
+    logLevel?:string 
 
     contracts: ContractConfig [] 
     customIndexers: CustomIndexer[],
@@ -165,6 +166,7 @@ export default class VibeGraph {
         let mongoConnectURI = initConfig.mongoConnectURI ? initConfig.mongoConnectURI : 'localhost:27017'
 
         mongoose.pluralize(null);
+        mongoose.set('strictQuery', true);
         const mongooseConnection = await mongoose.connect(`mongodb://${mongoConnectURI}/${dbName}`);
         //this.mongoInterface = new MongoInterface( ) 
         //await this.mongoInterface.init( dbName , mongoConnectURI )
@@ -189,6 +191,8 @@ export default class VibeGraph {
             
         this.fineBlockGap = indexingConfig.fineBlockGap ? indexingConfig.fineBlockGap : DEFAULT_FINE_BLOCK_GAP
         this.courseBlockGap = indexingConfig.courseBlockGap ? indexingConfig.courseBlockGap : DEFAULT_COURSE_BLOCK_GAP
+
+        this.logLevel = indexingConfig.logLevel
     }
 
 

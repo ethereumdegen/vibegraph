@@ -12,7 +12,7 @@
     "build": "yarn tsc",
     "test": "NODE_ENV=TEST ts-mocha -p tsconfig.testing.json 'test/**/*.spec.ts' --timeout 10000",
     "publish": "yarn npm publish --access public",
-    "vibegraph": "node tasks/vibeRunner.js",
+    "start": "yarn ts-node tasks/start.ts",
     "deleteIndexedData": "node tasks/deleteIndexedData.js"
   },
   "keywords": [
