@@ -102,6 +102,12 @@ const DEFAULT_FINE_BLOCK_GAP = 20
 const DEFAULT_COURSE_BLOCK_GAP = 8000
  
 
+
+export interface ContractEvent{
+
+
+}
+
 export default class VibeGraph {
 
     currentContractIndex:number = 0 
@@ -653,6 +659,10 @@ export default class VibeGraph {
             let contractABI = this.getABIFromType(contractType)
             let rpcProvider = this.rpcProvider 
 
+            if(!rpcProvider){
+                throw new Error("rpcProvider is undefined")
+            }
+
              await this.indexContractData( contractAddress, contractABI, rpcProvider, cIndexingBlock, scaledCourseBlockGap  )
             
             
@@ -707,6 +717,8 @@ export default class VibeGraph {
     }
 
     //fix me , save to mongo 
+
+      //give us fewer events 
     async increaseStepSizeScaleFactorForContract(contractAddress:string){
 
         let matchingContract = await this.getContractState(contractAddress)
@@ -726,6 +738,7 @@ export default class VibeGraph {
 
     }
 
+       //give us more events
     async decreaseStepSizeScaleFactorForContract(contractAddress:string){
 
         let matchingContract = await this.getContractState(contractAddress)
@@ -760,6 +773,8 @@ export default class VibeGraph {
 
     }
 
+
+
     async indexContractData(  contractAddress:string, contractABI:ethers.ContractInterface, rpcProvider: ethers.providers.Provider, startBlock:number, blockGap:number ){
 
 
@@ -772,33 +787,32 @@ export default class VibeGraph {
 
         try{
             var results = await this.getContractEvents( contract, "allEvents", startBlock, endBlock )
-        }catch(resultsError){
-            console.error('Request Error: ', results)
+        }catch(resultsError){ 
+          
+            await this.increaseStepSizeScaleFactorForContract( contractAddress  )  
 
-            
+            console.error('Request Error: ', resultsError)
+
+            return 
         }
         //need better error catch
 
-            if(this.logLevel=='debug'){
-                 
-
-                if(results && results.events && results.events.length == 0){
+            if(this.logLevel=='debug'){ 
+                if( results.events && results.events.length == 0){
                     console.log('zero results', results)
                 }
 
-                if(results && results.events && results.events.length > SAFE_EVENT_COUNT){
+                if( results.events && results.events.length > SAFE_EVENT_COUNT){
                     console.log('excessive results', results)
-                } 
-                 
+                }                 
             }
 
           
 
             if(!results || results.events.length > SAFE_EVENT_COUNT  ){
 
-                    await this.increaseStepSizeScaleFactorForContract( contractAddress  )
-                  
-                     
+                await this.increaseStepSizeScaleFactorForContract( contractAddress  )
+                   
 
             }else{
 
@@ -812,7 +826,7 @@ export default class VibeGraph {
                 if(!existingEventData){
 
                     //reduce storage size 
-                    let eventDataToStore = {
+                    let newEventData:Omit<IEventData,'_id'> = {
                         contractAddress: results.contractAddress, 
                         startBlock: results.startBlock ,
                         endBlock: results.endBlock,
@@ -820,27 +834,27 @@ export default class VibeGraph {
                         //and some other stuff ?
                     }
 
-                    await this.mongoInterface.insertOne('event_data',  eventDataToStore    )
-  
+                    await EventData.create(newEventData) 
                    
 
                     //our unique index ensures that we will not double count these 
-                    if(results.events && results.events.length > 0){
-
+                    if(results.events && results.events.length > 0){ 
                         
 
-                        let eventsToLog = results.events.filter(evt => ( evt.event != null )  )
+                        let eventsToLog = results.events.filter((evt:any) => ( evt.event != null )  )
 
                         if(eventsToLog && eventsToLog.length > 0 ){
                             try{ 
                                 let options = {ordered: false}
-                                 insertedMany = await this.mongoInterface.insertMany('event_list', eventsToLog /* results.events*/, options  )
+
+                                insertedMany = await EventList.insertMany( eventsToLog, options  )
+                              //   insertedMany = await this.mongoInterface.insertMany('event_list', eventsToLog /* results.events*/, options  )
                             }catch(e){
                                 console.error(e)
                             }
                         }
 
-                        let erroredEvents = results.events.filter(evt => ( !evt.event )  )
+                        let erroredEvents = results.events.filter((evt:any) => ( !evt.event )  )
                         if(erroredEvents && erroredEvents.length >0){
                             console.log('Could not insert events: ', JSON.stringify(erroredEvents))
                         }
@@ -852,10 +866,6 @@ export default class VibeGraph {
  
                     
                 } 
-
-                
-
-
  
 
                 await this.incrementCurrentBlockNumberForContract(contractAddress, startBlock, blockGap);
@@ -878,14 +888,25 @@ export default class VibeGraph {
    
 
 
-    async getContractEvents(contract:any, eventName:string, startBlock:number, endBlock:number ){
+    async getContractEvents(contract:any, eventName:string, startBlock:number, endBlock:number )
+    :Promise<{
+        contractAddress:string,
+        startBlock:number,
+        endBlock:number,
+        events:ContractEvent[]
+    
+    }>{
 
         
             return new Promise ((resolve, reject) => {
                 contract.getPastEvents(eventName, { fromBlock: startBlock, toBlock: endBlock }) 
-                .then(function(events){
-                    resolve({contractAddress: contract.options.address , startBlock: startBlock, endBlock: endBlock, events:events}) // same results as the optional callback above
-                }).catch(function(error){reject(error)});
+                .then(function(events:ContractEvent[]){
+                    resolve({
+                        contractAddress: contract.options.address ,
+                         startBlock: startBlock, 
+                         endBlock: endBlock, 
+                         events:events}) // same results as the optional callback above
+                }).catch(function(error:any){reject(error)});
             })
          
  
