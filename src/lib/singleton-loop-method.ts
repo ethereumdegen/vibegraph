@@ -47,7 +47,7 @@ export default class SingletonLoopMethod {
 
     async execute(){
         if(this.executing){
-            console.error('ALREADY EXECUTING')
+            //console.error('ALREADY EXECUTING')
             return
         }; 
 

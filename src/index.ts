@@ -133,7 +133,7 @@ export interface ContractEvent{
 export default class VibeGraph {
 
     currentContractIndex:number = 0 
-    rpcProvider?:ethers.providers.JsonRpcProvider
+    rpcProvider?:ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider
 
 
     onIndexCallback?:Function
@@ -229,8 +229,12 @@ export default class VibeGraph {
             throw new Error("Vibegraph prepIndexing: Must specify a web3ProviderUri in config")
         }
 
-       
+       if(indexingConfig.subscribe){
+        this.rpcProvider = new ethers.providers.WebSocketProvider( indexingConfig.web3ProviderUri );
+       }else{
         this.rpcProvider = new ethers.providers.JsonRpcProvider( indexingConfig.web3ProviderUri );
+       }
+       
         //this.web3 = new Web3( indexingConfig.web3ProviderUri )
 
 
@@ -390,11 +394,14 @@ export default class VibeGraph {
             let contractABI = this.getABIFromType(contractData.type) 
             let contractAddress = contractData.address
 
-            let myContract =  new ethers.Contract( contractAddress, contractABI )
+        //    let myContract =  new ethers.Contract( contractAddress, contractABI )
 
-            let contractEventTokens = myContract.options.jsonInterface.filter((token:any) => {
+            let contractEventTokens = Object.keys(contractABI.events)
+
+            
+          /*  let contractEventTokens = myContract.options.jsonInterface.filter((token:any) => {
                 return token.type === 'event';
-              });
+              });*/
             
          //   knownEventTokens = knownEventTokens.concat(contractEventTokens)
 
@@ -425,7 +432,7 @@ export default class VibeGraph {
 
     async subscribeToEvents(
         contractAddress:string,
-        contractABI:ethers.ContractInterface,
+        contractABI:ethers.utils.Interface,
         eventTokens: any[],
         rpcProvider?:ethers.providers.Provider
         ){
@@ -436,14 +443,12 @@ export default class VibeGraph {
             address: contractAddress     //Only get events from specific addresses 
         };
 
-        console.log('subscribing to logs ', options)
-         
- 
-
+        console.log('subscribing to logs ', options, eventTokens)
+          
             //make sure this works !!
-        let subscription = rpcProvider.on(options ,  async (rawEvent) =>  {
-
-
+        let subscription = rpcProvider.on(options ,  async (rawEvent:ContractEventRaw) =>  {
+            
+            console.log('gotRawEvent from subscription' , rawEvent)
              
             let matchingEventToken = null
 
@@ -452,36 +457,46 @@ export default class VibeGraph {
                 console.log(' eventTokens  ', eventTokens)
             }
 
+
+            let parsedEvent:ContractEvent | undefined = undefined 
+
+            try{
+                let decodeResult = contractABI.parseLog( rawEvent )
+
+                parsedEvent = {
+                    name: decodeResult.name,
+                    signature: decodeResult.signature,
+                    args: decodeResult.args,
+
+                    address:rawEvent.address,
+                    data: rawEvent.data,
+                    transactionHash: rawEvent.transactionHash, 
+                    blockNumber: rawEvent.blockNumber ,
+                    blockHash: rawEvent.blockHash 
+                     
+                 }
+            }catch(error:any){
+                console.error(error)
+
+            }
+
+            /*
+
             for(let eventToken of eventTokens){
                 if( rawEvent.topics[0] ==  eventToken.signature ){
                     matchingEventToken = eventToken 
                     break 
                 }
-            }
+            }*/
 
-            if(matchingEventToken){
-
-                
-                //https://github.com/ethers-io/ethers.js/issues/422 
-
-                //fix me !!
-
-                const outputs = ethers.utils.defaultAbiCoder.decode(
-                    matchingEventToken.inputs,
-                    rawEvent.data,
-                    rawEvent.topics.slice(1)
-                  ) 
-     
-
-                 rawEvent.name = matchingEventToken.name 
-                 rawEvent.returnValues = outputs 
-
+            if(parsedEvent){   
+ 
                  
-                let inserted = EventList.create(rawEvent)
+                let inserted = await EventList.create(parsedEvent)
                 // let inserted = await this.mongoInterface.insertOne('event_list', rawEvent)   
                     
                  if(this.logLevel=='debug'){
-                    console.log('inserted new event', rawEvent , inserted ) 
+                    console.log('inserted new event from subscription', rawEvent , inserted ) 
                  }
                 
 
@@ -715,8 +730,6 @@ export default class VibeGraph {
             if(!rpcProvider) throw new Error("Undefined rpc provider")
 
             await this.indexContractData( contractAddress, contractABI, rpcProvider, cIndexingBlock, remainingBlockGap  )
-         
-          
 
             await this.setParameterForContract(contractAddress, 'synced', true)
             await this.setParameterForContract(contractAddress, 'lastUpdated', Date.now())
@@ -952,7 +965,7 @@ export default class VibeGraph {
                 const decodedEvents: ContractEvent[] = rawEvents.map( (evt:ContractEventRaw) => {
                         
                     const decodeResult =   contractABI.parseLog( evt )
-                       
+                     //  console.log('meep',evt, decodeResult)
                     return {
                        name: decodeResult.name,
                        signature: decodeResult.signature,

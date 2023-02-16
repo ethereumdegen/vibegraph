@@ -9,7 +9,7 @@ export const EventListSchema = new Schema(
     blockNumber:{type:Number,required:true},
     logIndex:Number,
     removed:Boolean,
-    transactionHash:String,
+    transactionHash:{type:String,required:true},
     transactionIndex:Number,
     id:String,
     //returnValues: Object, 
@@ -21,6 +21,12 @@ export const EventListSchema = new Schema(
 
   } 
 )
+
+
+EventListSchema.index({ transactionHash: 1, logIndex: 1 }, { unique: true })
+
+
+
 
 mongoose.pluralize(null);
   

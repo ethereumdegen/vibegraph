@@ -34,7 +34,7 @@ let EnsRegistryABI = require( '../config/contracts/ENSRegistrarController.json' 
             updateBlockNumberRate: 60*1000,
             fineBlockGap: 20,
             logLevel:'debug',
-            subscribe: false, 
+            subscribe: true, 
             customIndexers:[{
                 type:'EnsRegistry', 
                 abi: EnsRegistryABI ,  
