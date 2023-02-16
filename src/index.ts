@@ -940,7 +940,7 @@ export default class VibeGraph {
                         fromBlock ,
                         toBlock,
                         address: contractAddress,
-                    //    topics: IssueEvent.topics
+                    //  topics: IssueEvent.topics
                     }
                 ).then(function(events:ContractEventRaw[]){
                     resolve(events) // same results as the optional callback above
@@ -948,14 +948,10 @@ export default class VibeGraph {
             })
 
             // const logData = IssueEvent.parse(log.topics, log.data);
-                
-            
-             
+                 
                 const decodedEvents: ContractEvent[] = rawEvents.map( (evt:ContractEventRaw) => {
-                       
-                    
+                        
                     const decodeResult =   contractABI.parseLog( evt )
-
                        
                     return {
                        name: decodeResult.name,
@@ -981,21 +977,9 @@ export default class VibeGraph {
                     contractAddress ,
                     fromBlock, 
                     toBlock, 
-                     events: decodedEvents
-                    }
-
-             /*   contract.getPastEvents(eventName, { fromBlock: startBlock, toBlock: endBlock }) 
-                .then(function(events:ContractEvent[]){
-                    resolve({
-                        contractAddress: contract.options.address ,
-                         startBlock: startBlock, 
-                         endBlock: endBlock, 
-                         events:events}) // same results as the optional callback above
-                }).catch(function(error:any){reject(error)});
-                
-            })*/
-        
-         
+                    events: decodedEvents
+                }
+ 
  
 
     }
