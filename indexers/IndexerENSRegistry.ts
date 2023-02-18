@@ -7,8 +7,7 @@ import VibegraphIndexer from './VibegraphIndexer'
 
 var namehash = require('@ensdomains/eth-ens-namehash')
 
-
-
+https://eips.ethereum.org/EIPS/eip-137#namehash-algorithm
 
 module.exports =  class IndexerENSRegistry extends VibegraphIndexer {
    
@@ -31,7 +30,7 @@ module.exports =  class IndexerENSRegistry extends VibegraphIndexer {
             tokenId,
             name: registeredName,
             label: labelHash,
-            nameHash: namehash.hash(`${registeredName}.eth`),
+            node: namehash.hash(`${registeredName}.eth`),
           //  resolverAddress: undefined  //?
         }
         let created = await EnsDomain.create(newDomain)

@@ -10,7 +10,8 @@ export const EnsDomainSchema = new Schema(
 
     name: { type: String, required: true, index: true },
 
-    nameHash: { type:String, required:true, index:true }, //this is 'node' in events
+    //namehash
+    node: { type:String, required:true, index:true }, //this is 'node' in events
     
     resolverAddress: { type: String },
 
