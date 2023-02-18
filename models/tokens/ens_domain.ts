@@ -5,10 +5,10 @@ export const EnsDomainSchema = new Schema(
   {
     contractAddress: { type: String, required: true, index: true },
 
-    tokenId: { type: String, required: true, index: true },
+    tokenId: { type: String, required: true, index: true, unique:true  },
     label: { type: String, required: true, index: true }, //this is 'label' in events
 
-    name: { type: String, required: true, index: true },
+    name: { type: String, required: true, index: true, unique:true  },
 
     //namehash
     node: { type:String, required:true, index:true }, //this is 'node' in events

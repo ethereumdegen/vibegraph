@@ -1,11 +1,6 @@
  
 
-
-//const web3utils = require('web3').utils
-
-
-//var Web3 = require('web3')
-
+ 
 
 import { ethers } from "ethers";
 
@@ -29,9 +24,7 @@ import {EventList, IEventList} from '../models/event_list'
 import {EventData, IEventData} from '../models/event_data'
 import { Interface } from "ethers/lib/utils";
 
-/*
- TODO: should convert this to typescript with well defined types 
-*/
+ 
 
 /*
     indexingConfig:{
@@ -90,8 +83,7 @@ export interface IndexingConfig {
 export interface ContractConfig {
     address:string ,
     startBlock: number ,
-    type: string // match type of the custom indexer 
-
+    type: string // match type of the custom indexer
 }
 
 export interface CustomIndexer {
@@ -125,9 +117,7 @@ export interface ContractEvent{
     data:string 
     transactionHash:string 
     blockNumber:number 
-    blockHash:string 
-
-
+    blockHash:string
 
 }
 export default class VibeGraph {
@@ -309,7 +299,7 @@ export default class VibeGraph {
          
         for(let indexer of this.customIndexersArray){
             if(type == indexer.type.toLowerCase()){
-               //     console.log('meep',JSON.stringify(indexer.abi))
+             
                 return new ethers.utils.Interface(JSON.stringify(indexer.abi))
             }
         }
@@ -491,13 +481,19 @@ export default class VibeGraph {
 
             if(parsedEvent){   
  
-                 
-                let inserted = await EventList.create(parsedEvent)
+                try{
+                    let inserted = await EventList.create(parsedEvent)
+
+                    if(this.logLevel=='debug'){
+                        console.log('inserted new event from subscription', rawEvent , inserted ) 
+                     }
+                     
+                }catch(err:any){
+                    console.error(err)
+                }
                 // let inserted = await this.mongoInterface.insertOne('event_list', rawEvent)   
                     
-                 if(this.logLevel=='debug'){
-                    console.log('inserted new event from subscription', rawEvent , inserted ) 
-                 }
+              
                 
 
             }else{
@@ -678,6 +674,7 @@ export default class VibeGraph {
 
         let contractData = this.contractsArray[this.currentContractIndex]
         let contractAddress = contractData.address
+        
 
         var madeApiRequest = false;
 
@@ -689,7 +686,7 @@ export default class VibeGraph {
 
         let cIndexingBlock = matchingContract.currentIndexingBlock // await this.readParameterForContract(contractAddress , 'currentIndexingBlock')   //parseInt(this.currentIndexingBlock) 
 
-        let contractType = matchingContract.type //await this.readParameterForContract(contractAddress , 'type')   //parseInt(this.currentIndexingBlock) 
+        let contractType = contractData.type //await this.readParameterForContract(contractAddress , 'type')   //parseInt(this.currentIndexingBlock) 
 
         let fineBlockGap = this.fineBlockGap ? this.fineBlockGap : DEFAULT_FINE_BLOCK_GAP
 
@@ -824,7 +821,7 @@ export default class VibeGraph {
 
 
 
-        let contract = getCustomContract( contractAddress, contractABI, rpcProvider  )
+      //  let contract = getCustomContract( contractAddress, contractABI, rpcProvider  )
         
         var insertedMany; 
           
@@ -942,10 +939,7 @@ export default class VibeGraph {
         fromBlock:number,
         toBlock:number,
         events:ContractEvent[]
-    
-    }>{
-
-        
+    }>{        
             let rawEvents:ContractEventRaw[] = await new Promise ((resolve, reject) => {
 
                 provider.getLogs(
@@ -960,12 +954,14 @@ export default class VibeGraph {
                 }).catch(function(error:any){reject(error)});
             })
 
-            // const logData = IssueEvent.parse(log.topics, log.data);
+               // const logData = IssueEvent.parse(log.topics, log.data);
                  
                 const decodedEvents: ContractEvent[] = rawEvents.map( (evt:ContractEventRaw) => {
-                        
-                    const decodeResult =   contractABI.parseLog( evt )
-                     //  console.log('meep',evt, decodeResult)
+
+                     
+
+                    const decodeResult = contractABI.parseLog( evt )
+                     
                     return {
                        name: decodeResult.name,
                        signature: decodeResult.signature,
@@ -974,7 +970,7 @@ export default class VibeGraph {
                        address:evt.address,
                        data: evt.data,
                        transactionHash: evt.transactionHash, 
-                       blockNumber: evt.blockNumber ,
+                       blockNumber: evt.blockNumber,
                        blockHash: evt.blockHash 
                         
                     }
@@ -987,7 +983,7 @@ export default class VibeGraph {
 
             
                 return  {
-                    contractAddress ,
+                    contractAddress,
                     fromBlock, 
                     toBlock, 
                     events: decodedEvents

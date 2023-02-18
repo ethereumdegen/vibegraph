@@ -21,8 +21,7 @@ let EnsRegistryABI = require( '../config/contracts/ENSRegistry.json' )
         
         let vibegraphConfig:VibegraphConfig = {
             contracts:[
-                    //mainnet 
-                   
+                    //mainnet                    
                     {
                      address:"0x00000000000c2e074ec69a0dfb2997ba6c7d2e1e", 
                      startBlock: 9380380,
@@ -32,8 +31,7 @@ let EnsRegistryABI = require( '../config/contracts/ENSRegistry.json' )
                     address:"0x283af0b28c62c092c9727f1ee09c02ca627eb7f5", 
                     startBlock: 9380471,
                     type:"EnsRegistrarController"
-                    } 
-              
+                    }              
                     ],
              
             dbName:"vibegraph_dev",

@@ -2,6 +2,7 @@
 //const VibegraphIndexer = require('./VibegraphIndexer')
  import { ethers, BigNumber } from 'ethers'
 import { EnsDomain, IEnsDomain } from '../models/tokens/ens_domain'
+import { SetEnsResolverEvent } from '../models/tokens/set_ens_resolver_event'
 import { ContractEvent } from '../src'
 import VibegraphIndexer from './VibegraphIndexer'
  
@@ -12,6 +13,7 @@ module.exports =  class IndexerENSRegistry extends VibegraphIndexer {
 
  
         let eventArgs:any = event.args 
+        let blockNumber = event.blockNumber
 
 
         if(event.name=='NewResolver'){
@@ -23,9 +25,10 @@ module.exports =  class IndexerENSRegistry extends VibegraphIndexer {
             const node = eventArgs[0]
             const resolverAddress = eventArgs[1]
 
-            let created = await NewResolverEvent({
+            let created = await SetEnsResolverEvent.create({
                 node,
-                resolverAddress
+                resolverAddress,
+                blockNumber
             })
 
 

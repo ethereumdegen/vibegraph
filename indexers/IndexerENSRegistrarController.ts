@@ -9,7 +9,7 @@ var namehash = require('@ensdomains/eth-ens-namehash')
 
 https://eips.ethereum.org/EIPS/eip-137#namehash-algorithm
 
-module.exports =  class IndexerENSRegistry extends VibegraphIndexer {
+module.exports =  class IndexerENSRegistrarController extends VibegraphIndexer {
    
     async onEventEmitted(event:ContractEvent){
 
