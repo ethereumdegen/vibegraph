@@ -4,16 +4,34 @@
 import { EnsDomain, IEnsDomain } from '../models/tokens/ens_domain'
 import { ContractEvent } from '../src'
 import VibegraphIndexer from './VibegraphIndexer'
-
-var namehash = require('@ensdomains/eth-ens-namehash')
-
-https://eips.ethereum.org/EIPS/eip-137#namehash-algorithm
-
+ 
 module.exports =  class IndexerENSRegistry extends VibegraphIndexer {
    
     async onEventEmitted(event:ContractEvent){
 
-        console.log('got emitted event ', event )
+
+ 
+        let eventArgs:any = event.args 
+
+
+        if(event.name=='NewResolver'){
+
+
+
+             console.log('got emitted event ', event )
+
+            const node = eventArgs[0]
+            const resolverAddress = eventArgs[1]
+
+            let created = await NewResolverEvent({
+                node,
+                resolverAddress
+            })
+
+
+        }
+
+      /*  console.log('got emitted event ', event )
  
         let eventArgs:any = event.args 
         let registeredName = eventArgs[0]
@@ -34,7 +52,7 @@ module.exports =  class IndexerENSRegistry extends VibegraphIndexer {
           //  resolverAddress: undefined  //?
         }
         let created = await EnsDomain.create(newDomain)
-
+        */
     }
 
  
