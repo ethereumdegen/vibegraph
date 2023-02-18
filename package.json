@@ -13,6 +13,7 @@
     "test": "NODE_ENV=TEST ts-mocha -p tsconfig.testing.json 'test/**/*.spec.ts' --timeout 10000",
     "publish": "yarn npm publish --access public",
     "start": "yarn ts-node tasks/start.ts",
+    "resolve": "yarn ts-node tasks/resolve.ts",
     "deleteIndexedData": "node tasks/deleteIndexedData.js"
   },
   "keywords": [
@@ -25,6 +26,7 @@
   "author": "apexmfer",
   "license": "MIT",
   "dependencies": {
+    "@ensdomains/eth-ens-namehash": "^2.0.15",
     "ethers": "^5.7.1",
     "mongodb": "^3.6.5",
     "mongoose": "^6.9.1"
