@@ -30,6 +30,7 @@ module.exports =  class IndexerENSRegistry extends VibegraphIndexer {
             contractAddress: event.address,
             tokenId,
             name: registeredName,
+            label: labelHash,
             nameHash: namehash.hash(`${registeredName}.eth`),
           //  resolverAddress: undefined  //?
         }

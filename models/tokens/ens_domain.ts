@@ -6,10 +6,11 @@ export const EnsDomainSchema = new Schema(
     contractAddress: { type: String, required: true, index: true },
 
     tokenId: { type: String, required: true, index: true },
+    label: { type: String, required: true, index: true }, //this is 'label' in events
 
     name: { type: String, required: true, index: true },
 
-    nameHash: { type:String, required:true, index:true },
+    nameHash: { type:String, required:true, index:true }, //this is 'node' in events
     
     resolverAddress: { type: String },
 
