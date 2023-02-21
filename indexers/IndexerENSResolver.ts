@@ -1,13 +1,13 @@
 
 //const VibegraphIndexer = require('./VibegraphIndexer')
  import { ethers, BigNumber } from 'ethers'
+import { EnsAddrChangedEvent } from '../models/tokens/ens_addr_changed_event'
 import { EnsDomain, IEnsDomain } from '../models/tokens/ens_domain'
-import { EnsNewOwnerEvent } from '../models/tokens/ens_new_owner_event'
 import { SetEnsResolverEvent } from '../models/tokens/set_ens_resolver_event'
 import { ContractEvent } from '../src'
 import VibegraphIndexer from './VibegraphIndexer'
  
-module.exports =  class IndexerENSRegistry extends VibegraphIndexer {
+module.exports =  class IndexerENSResolver extends VibegraphIndexer {
    
     async onEventEmitted(event:ContractEvent){
 
@@ -17,40 +17,25 @@ module.exports =  class IndexerENSRegistry extends VibegraphIndexer {
         let blockNumber = event.blockNumber
 
 
-        console.log('got emitted event ', event )
+        if(event.name=='AddrChanged'){  
 
-        if(event.name=='NewResolver'){  
-
-           
+             console.log('got emitted event ', event )
 
             const node = eventArgs[0]
-            const resolverAddress = eventArgs[1]
+            const address = eventArgs[1]
 
-            let created = await SetEnsResolverEvent.create({
+
+            //all resolvers MUST TRIGGER THIS EVENT !! this is the key - the secret sauce 
+            //event AddrChanged(bytes32 indexed node, address a);
+
+            let created = await EnsAddrChangedEvent.create({
                 node,
-                resolverAddress,
+                address,
                 blockNumber
             })
 
 
         }
-
-        if(event.name=='NewOwner'){  
- 
-
-         const node = eventArgs[0]
-         const label = eventArgs[1]
-         const address = eventArgs[2]
-
-         let created = await EnsNewOwnerEvent.create({
-             node,
-             label,
-             address,
-             blockNumber
-         })
-
-
-     }
 
       /*  console.log('got emitted event ', event )
  

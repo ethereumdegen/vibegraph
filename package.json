@@ -1,6 +1,6 @@
 {
   "name": "vibegraph",
-  "version": "0.35.0",
+  "version": "0.40.0",
   "description": "Web3 data collection bot that saves events to MongoDB by synchonizing relevant chaindata",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -14,6 +14,7 @@
     "publish": "yarn npm publish --access public",
     "start": "yarn ts-node tasks/start.ts",
     "resolve": "yarn ts-node tasks/resolve.ts",
+    "resolveReverse": "yarn ts-node tasks/resolveReverse.ts",
     "deleteIndexedData": "node tasks/deleteIndexedData.js"
   },
   "keywords": [

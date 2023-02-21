@@ -26,7 +26,7 @@ module.exports =  class IndexerENSRegistrarController extends VibegraphIndexer {
             
     
             //this works ! 
-            console.log({tokenId})
+             
     
             const newDomain:Omit<IEnsDomain,'_id'> = {
                 contractAddress: event.address,
