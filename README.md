@@ -122,9 +122,7 @@ Specify a custom indexer in the vibegraph config like so:
 
 Where 'IndexerTellerOptions' is an imported Class similar to ./indexers/IndexerCryptopunks.js, TellerOptionsABI is a parsed JSON object and the type string is the identifier.  
 
-An indexer javascript file must export an 'async' method named 'initialize' and must export an 'async' method named 'modifyLedgerByEvent' which accepts one argument: event.   Vibegraph will call initialize when it starts up and will call modifyLedgerByEvent(event)  whenever it recieves new data from the web3 connection.  You can handle this data in any way that you want. As you can see in example indexers, is recommended that you set the 'this.mongoInterface' variable during 'initialize' so you can interact with that database when events stream in.  Typically, you will parse the event object and then interpret that data to update or insert data into a database.
-
-Version 0.30.0 of vibegraph allows you to interact with any database inside of an indexer and it uses a separate database for storing information about the indexing process.  This is possible because now, indexers must be instantiated classes.
+An indexer javascript file must must export an 'async' method named 'onEventEmitted' which accepts one argument: event.  Extend the interface 'Vibegraph Indexer'.  Vibegraph will call onEventEmitted(event)  whenever it recieves new data from the web3 connection.  You can handle this data in any way that you want. As you can see in example indexers, typically, you will parse the event object and then interpret that data to update or insert data into a database.
 
 
 #### Database Topology
