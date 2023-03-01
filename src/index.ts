@@ -1044,17 +1044,11 @@ export default class VibeGraph {
             console.log('WARN: unknown event in ', event.transactionHash )
             return {success:true } 
         }
-
-        try{
-            //@ts-ignore
-            let result = await indexer.onEventEmitted(event)
-
-            return {success:true, result: result} 
-        }catch(e){
-            console.error(e)
-            return {success:false } 
-        }
-      
+ 
+        //@ts-ignore
+        let result = await indexer.onEventEmitted(event)
+        return result 
+    
         
 
     }
