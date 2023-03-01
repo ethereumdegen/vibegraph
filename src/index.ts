@@ -48,6 +48,7 @@ import { Interface } from "ethers/lib/utils";
 var SAFE_EVENT_COUNT = 7000
 var LOW_EVENT_COUNT = 1500
 
+const UPDATE_LEDGER_PAGE_LIMIT = 500
 
 /*
 var indexers = {
@@ -539,7 +540,7 @@ export default class VibeGraph {
         let contractType = matchingContract.type // await this.readParameterForContract(contractAddress, 'type')
  
 
-        let newEventsArray = await EventList.find({address: contractAddress, hasAffectedLedger: null }).limit(5000)
+        let newEventsArray = await EventList.find({address: contractAddress, hasAffectedLedger: null }).limit(UPDATE_LEDGER_PAGE_LIMIT)
         // = await this.mongoInterface.findAllWithLimit('event_list',{address: contractAddress, hasAffectedLedger: null }, 5000)
 
         if(this.logLevel=='debug' && newEventsArray.length > 0){
