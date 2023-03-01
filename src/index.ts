@@ -520,7 +520,14 @@ export default class VibeGraph {
 
     }
 
-    async updateLedger(){
+
+    /*
+    
+    make sure page limit is not to high!! will cause high RAM use
+
+    */
+
+    async updateLedger(customPageLimit?:number){
 
         
 
@@ -540,9 +547,8 @@ export default class VibeGraph {
         let contractType = matchingContract.type // await this.readParameterForContract(contractAddress, 'type')
  
 
-        let newEventsArray = await EventList.find({address: contractAddress, hasAffectedLedger: null }).limit(UPDATE_LEDGER_PAGE_LIMIT)
-        // = await this.mongoInterface.findAllWithLimit('event_list',{address: contractAddress, hasAffectedLedger: null }, 5000)
-
+        let newEventsArray = await EventList.find({address: contractAddress, hasAffectedLedger: null }).limit(customPageLimit ? customPageLimit : UPDATE_LEDGER_PAGE_LIMIT)
+      
         if(this.logLevel=='debug' && newEventsArray.length > 0){
             console.log('update ledger: ', newEventsArray.length)
           }
