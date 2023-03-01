@@ -18,6 +18,8 @@ import SingletonLoopMethod from './lib/singleton-loop-method'
 
 import VibegraphIndexer from '../indexers/VibegraphIndexer' 
 
+ 
+
 import {ContractState, IContractState} from '../models/contract_state'
 
 import {EventList, IEventList} from '../models/event_list'
@@ -52,6 +54,7 @@ var indexers = {
     'erc721': IndexerERC721,
     'erc20': IndexerERC20 
 }*/
+ 
 
 
 export type VibegraphConfig = DatabaseConfig & IndexingConfig
@@ -124,7 +127,11 @@ export interface ContractEvent{
 }
 export default class VibeGraph {
 
-    currentContractIndex:number = 0 
+    currentContractIndex:number = 0  //used for index data
+
+    ledgerContractIndex?:number = 0 //used for update ledger 
+
+
     rpcProvider?:ethers.providers.JsonRpcProvider | ethers.providers.WebSocketProvider
 
 
@@ -132,7 +139,6 @@ export default class VibeGraph {
 
     blocknumberUpdatedAt?:number 
 
-    ledgerContractIndex?:number 
 
     contractsArray:ContractConfig[] = []
     customIndexersArray:CustomIndexer[] = []  
@@ -522,7 +528,7 @@ export default class VibeGraph {
         }
         
         let contractData = this.contractsArray[this.ledgerContractIndex]
-        let contractAddress =  contractData.address 
+        let contractAddress = ethers.utils.getAddress(contractData.address)
 
         let matchingContract = await this.getContractState(contractAddress)
 

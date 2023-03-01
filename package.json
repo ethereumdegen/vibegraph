@@ -1,6 +1,6 @@
 {
   "name": "vibegraph",
-  "version": "0.40.1",
+  "version": "0.40.2",
   "description": "Web3 data collection bot that saves events to MongoDB by synchonizing relevant chaindata",
   "main": "dist/src/index",
   "types": "dist/src/index",
