@@ -547,7 +547,12 @@ export default class VibeGraph {
         let contractType = matchingContract.type // await this.readParameterForContract(contractAddress, 'type')
  
 
-        let newEventsArray = await EventList.find({address: contractAddress, hasAffectedLedger: null }).limit(customPageLimit ? customPageLimit : UPDATE_LEDGER_PAGE_LIMIT)
+        let newEventsArray = await EventList.find({
+            address: contractAddress,
+            hasAffectedLedger: false,
+            errorAffectingLedger: false
+
+         }).limit(customPageLimit ? customPageLimit : UPDATE_LEDGER_PAGE_LIMIT)
       
         if(this.logLevel=='debug' && newEventsArray.length > 0){
             console.log('update ledger: ', newEventsArray.length)
@@ -555,10 +560,17 @@ export default class VibeGraph {
 
         for(let event of newEventsArray){
 
+            try{
+
             let modify = await this.triggerOnEventEmitted(event, contractType)
 
             await EventList.updateOne( {_id: event._id }, {hasAffectedLedger: true } )
-          //  await this.mongoInterface.updateOne('event_list', {_id: event._id }, {hasAffectedLedger: true })
+
+            }catch(e:any){
+                console.log('error updating ledger', e)
+                await EventList.updateOne( {_id: event._id }, {errorAffectingLedger: true } )
+            }
+       
         }
 
         if(this.onIndexCallback && newEventsArray && newEventsArray.length > 0){

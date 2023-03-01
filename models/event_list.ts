@@ -3,8 +3,8 @@ import mongoose, { Schema, Model, InferSchemaType, model, Require_id } from 'mon
 
 export const EventListSchema = new Schema(
   {
-    name:{type:String,required:true},
-    address:{type:String,required:true},
+    name:{type:String,required:true,index:true},
+    address:{type:String,required:true,index:true},
     blockHash:String,
     blockNumber:{type:Number,required:true},
     logIndex:Number,
@@ -16,7 +16,12 @@ export const EventListSchema = new Schema(
     args: Object,
     signature:String,
     raw:Object,
-    hasAffectedLedger:Boolean,
+
+
+    hasAffectedLedger:{type:Boolean,default:false,index:true},
+    errorAffectingLedger:{type:Boolean,default:false,index:true},
+
+
 
 
   } 
