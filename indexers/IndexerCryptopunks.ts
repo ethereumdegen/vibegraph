@@ -1,20 +1,12 @@
 
-const VibegraphIndexer = require('./VibegraphIndexer')
-const web3utils = require('web3').utils
+
+import VibegraphIndexer from './VibegraphIndexer'
+import { ethers, BigNumber } from 'ethers'
 
 
 module.exports =  class IndexerERC721 extends VibegraphIndexer {
 
-    mongoInterface
-
-    async initialize(mongoInterface){
-
-        if(mongoInterface){
-            this.mongoInterface = mongoInterface
-        }
-      
-
-    }
+    
 
 
     async onEventEmitted(event){
@@ -40,14 +32,14 @@ module.exports =  class IndexerERC721 extends VibegraphIndexer {
 
         let outputs = event.returnValues
  
-        let contractAddress = web3utils.toChecksumAddress(event.address)
+        let contractAddress = ethers.utils.getAddress(event.address)
        
         //event Assign(uint indexed punkIndex, uint value, address indexed fromAddress, address indexed toAddress);
        
         if(eventName == 'assign' ){
             
             let from = contractAddress
-            let to = web3utils.toChecksumAddress(outputs['0'] )
+            let to = ethers.utils.getAddress(outputs['0'] )
             let tokenId = parseInt(outputs['1'])
             
 
@@ -59,8 +51,8 @@ module.exports =  class IndexerERC721 extends VibegraphIndexer {
        
         if(eventName == 'punkbought' ){
             let tokenId = parseInt(outputs['0'])
-            let from = web3utils.toChecksumAddress(outputs['2'] )
-            let to = web3utils.toChecksumAddress(outputs['3'] )
+            let from = ethers.utils.getAddress(outputs['2'] )
+            let to = ethers.utils.getAddress(outputs['3'] )
             
 
             await IndexerERC721.removeCryptopunkFromAccount( from ,contractAddress , tokenId  ,mongoInterface )
@@ -69,8 +61,8 @@ module.exports =  class IndexerERC721 extends VibegraphIndexer {
 
         //event PunkTransfer(address indexed from, address indexed to, uint256 punkIndex);
         if(eventName == 'punktransfer' ){
-            let from = web3utils.toChecksumAddress(outputs['0'] )
-            let to = web3utils.toChecksumAddress(outputs['1'] )
+            let from = ethers.utils.getAddress(outputs['0'] )
+            let to = ethers.utils.getAddress(outputs['1'] )
             let tokenId =  parseInt(outputs['2'])
 
             await IndexerERC721.removeCryptopunkFromAccount( from ,contractAddress , tokenId  ,mongoInterface )

@@ -25,21 +25,21 @@ Ethereum event indexing collection service for Web3 events such as Transfer/Appr
     let VibeGraph = require('vibegraph')
     let ERC721ABI = require( '../config/ERC721ABI.json' )
  
-    let vibegraphConfig = {
+    let vibegraphConfig:VibegraphConfig = {
         contracts:[{address:"0x39ec448b891c476e166b3c3242a90830db556661", startBlock: 4465713, type:'ERC721'},
                         {address:"0x7cea7e61f8be415bee361799f19644b9889713cd", startBlock: 4528636, type:'ERC721'}],
             
         dbName:"vibegraph_development",
         indexRate: 10*1000,
         courseBlockGap: 8000,
-        logging:true,
+        logLevel:'debug',
         subscribe: false,
         customIndexers:[{
                 type:'ERC721', 
                 abi: ERC721ABI ,  
                 handler: indexerErc721   //see example in ./indexers 
              }],
-        web3ProviderUri:  "wss://...." 
+        web3ProviderUri:  "https://...." 
     }
 
 
@@ -62,7 +62,7 @@ Ethereum event indexing collection service for Web3 events such as Transfer/Appr
         await vibegraph.updateLedger() //execute callbacks on indexers from the events 
         
     
-        sleep(1000)
+        await sleep(1000)
      }
 
         
@@ -73,7 +73,7 @@ Ethereum event indexing collection service for Web3 events such as Transfer/Appr
  
  Once vibegraph synchronizes to the front of the blockchain data (current state) then it will use the 'fineBlockGap' to remain synchronized.  
  
- As vibegraph is scraping chaindata for each contract, it triggers onEventEmitted(evt) in the corresponding Indexer for each event.  
+ As vibegraph is scraping chaindata for each contract, it triggers onEventEmitted(evt) in the corresponding Indexer for each event emitted by that contract.  That way, your custom code in the indexer can cache that event data in your local database ( for example ). 
  
  
  ### Examples 

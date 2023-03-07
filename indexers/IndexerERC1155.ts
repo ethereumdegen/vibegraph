@@ -1,21 +1,10 @@
 
-const VibegraphIndexer = require('./VibegraphIndexer')
-
-const web3utils = require('web3').utils
+import VibegraphIndexer from './VibegraphIndexer'
+import { ethers, BigNumber } from 'ethers'
 
 
 module.exports =  class IndexerERC1155 extends VibegraphIndexer{
-
-    mongoInterface
-
-    async initialize( mongoInterface ){
-
-        if(mongoInterface){
-            this.mongoInterface = mongoInterface
-        }
-      
-    }
-
+ 
     async onEventEmitted(event){
 
         await IndexerERC1155.modifyERC1155LedgerByEvent(event,this.mongoInterface)
@@ -37,14 +26,14 @@ module.exports =  class IndexerERC1155 extends VibegraphIndexer{
 
         let outputs = event.returnValues
  
-        let contractAddress = web3utils.toChecksumAddress(event.address)
+        let contractAddress = ethers.utils.getAddress(event.address)
        
 
        
         if(eventName == 'transfersingle' ){
-            let operator = web3utils.toChecksumAddress(outputs._operator )
-            let from = web3utils.toChecksumAddress(outputs._from )
-            let to = web3utils.toChecksumAddress(outputs._to )
+            let operator = ethers.utils.getAddress(outputs._operator )
+            let from = ethers.utils.getAddress(outputs._from )
+            let to = ethers.utils.getAddress(outputs._to )
             let tokenId = parseInt(outputs._id)
             let value = parseInt(outputs._value)
 
@@ -53,9 +42,9 @@ module.exports =  class IndexerERC1155 extends VibegraphIndexer{
         }
 
         if(eventName == 'transferbatch' ){
-            let operator = web3utils.toChecksumAddress(outputs._operator )
-            let from = web3utils.toChecksumAddress(outputs._from )
-            let to = web3utils.toChecksumAddress(outputs._to )
+            let operator = ethers.utils.getAddress(outputs._operator )
+            let from = ethers.utils.getAddress(outputs._from )
+            let to = ethers.utils.getAddress(outputs._to )
             let tokenIdArray =  (outputs._ids)
             let valueArray =  (outputs._values)
 

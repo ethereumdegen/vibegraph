@@ -1,23 +1,11 @@
 
-const VibegraphIndexer = require('./VibegraphIndexer')
-
-const web3utils = require('web3').utils
+import VibegraphIndexer from './VibegraphIndexer'
+import { ethers, BigNumber } from 'ethers'
 
 
 module.exports = class IndexerERC721 extends VibegraphIndexer{
-
-
-    constructor(   mongoInterface  ) {
-        super()
-        if(mongoInterface){
-            this.mongoInterface = mongoInterface
-        }
-    }
-
-    async initialize( ){
  
-
-    }
+     
 
     async onEventEmitted(event){
 
@@ -46,12 +34,12 @@ module.exports = class IndexerERC721 extends VibegraphIndexer{
 
         let outputs = event.returnValues
  
-        let contractAddress = web3utils.toChecksumAddress(event.address)
+        let contractAddress = ethers.utils.getAddress(event.address)
        
 
         if(eventName == 'transfer' ){
-            let from = web3utils.toChecksumAddress(outputs['0'] )
-            let to = web3utils.toChecksumAddress(outputs['1'] )
+            let from = ethers.utils.getAddress(outputs['0'] )
+            let to = ethers.utils.getAddress(outputs['1'] )
             let tokenId = parseInt(outputs['2'])    
 
             await IndexerERC721.recordTransfer( from, to ,contractAddress , tokenId ,blockNumber, transactionIndex  ,mongoInterface) 
@@ -63,8 +51,8 @@ module.exports = class IndexerERC721 extends VibegraphIndexer{
         }
 
         if(eventName == 'transfersingle' ){
-            let from = web3utils.toChecksumAddress(outputs._from )
-            let to = web3utils.toChecksumAddress(outputs._to )
+            let from = ethers.utils.getAddress(outputs._from )
+            let to = ethers.utils.getAddress(outputs._to )
             let tokenId = parseInt(outputs._id)
 
             await IndexerERC721.recordTransfer( from, to ,contractAddress , tokenId ,blockNumber, transactionIndex  ,mongoInterface) 

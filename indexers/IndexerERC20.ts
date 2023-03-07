@@ -1,21 +1,10 @@
 
-const VibegraphIndexer = require('./VibegraphIndexer')
-const web3utils = require('web3').utils
-
+import VibegraphIndexer from './VibegraphIndexer'
+import { ethers, BigNumber } from 'ethers'
 
 module.exports =  class IndexerERC20 extends VibegraphIndexer  {
 
-    mongoInterface
-
-    async initialize(mongoInterface){
-
-        if(mongoInterface){
-            this.mongoInterface = mongoInterface
-        }
-      
-
-    }
-
+   
 
     async onEventEmitted(event){
 
@@ -33,7 +22,7 @@ module.exports =  class IndexerERC20 extends VibegraphIndexer  {
 
        let outputs = event.returnValues
 
-       let contractAddress = web3utils.toChecksumAddress(event.address )
+       let contractAddress = ethers.utils.getAddress(event.address )
        if(!eventName){
 
            console.log('WARN: unknown event in ', event.transactionHash )
@@ -44,8 +33,8 @@ module.exports =  class IndexerERC20 extends VibegraphIndexer  {
        
        if(eventName == 'transfer'){
 
-           let from = web3utils.toChecksumAddress( outputs['0'] )
-           let to = web3utils.toChecksumAddress( outputs['1'] )
+           let from = ethers.utils.getAddress( outputs['0'] )
+           let to = ethers.utils.getAddress( outputs['1'] )
            let amount = parseInt(outputs['2']) 
 
 
@@ -62,8 +51,8 @@ module.exports =  class IndexerERC20 extends VibegraphIndexer  {
        }
        else if(eventName == 'approval'){
 
-           let from = web3utils.toChecksumAddress(outputs['0'] )
-           let to = web3utils.toChecksumAddress(outputs['1'] )
+           let from = ethers.utils.getAddress(outputs['0'] )
+           let to = ethers.utils.getAddress(outputs['1'] )
            let amount = parseInt(outputs['2']) 
 
            await IndexerERC20.setERC20LedgerApproval(   contractAddress , from, to,  amount  , mongoInterface ) 
@@ -71,7 +60,7 @@ module.exports =  class IndexerERC20 extends VibegraphIndexer  {
        }
        else if(eventName == 'mint'){
 
-           let to = web3utils.toChecksumAddress(outputs['0'] ) 
+           let to = ethers.utils.getAddress(outputs['0'] ) 
            let amount = parseInt(outputs['1']) 
 
            await IndexerERC20.modifyERC20LedgerBalance(   to ,contractAddress , amount  , mongoInterface)  
@@ -79,7 +68,7 @@ module.exports =  class IndexerERC20 extends VibegraphIndexer  {
        }
        else if(eventName == 'deposit'){
 
-           let to = web3utils.toChecksumAddress(outputs['0'] ) 
+           let to = ethers.utils.getAddress(outputs['0'] ) 
            let amount = parseInt(outputs['1']) 
 
            await IndexerERC20.modifyERC20LedgerBalance(   to ,contractAddress , amount , mongoInterface)  
@@ -88,7 +77,7 @@ module.exports =  class IndexerERC20 extends VibegraphIndexer  {
 
        else if(eventName == 'withdrawal'){
 
-           let from = web3utils.toChecksumAddress(outputs['0'] ) 
+           let from = ethers.utils.getAddress(outputs['0'] ) 
            let amount = parseInt(outputs['1']) 
 
            await IndexerERC20.modifyERC20LedgerBalance(   from ,contractAddress , amount * -1 , mongoInterface)  
