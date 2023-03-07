@@ -232,8 +232,18 @@ export default class VibeGraph {
         }
 
        if(indexingConfig.subscribe){
+
+        if( !indexingConfig.web3ProviderUri.startsWith('wss')){
+            throw new Error("web3 provider uri must start with wss if using subcribe:true ")
+        }
+
         this.rpcProvider = new ethers.providers.WebSocketProvider( indexingConfig.web3ProviderUri );
        }else{
+
+        if( !indexingConfig.web3ProviderUri.startsWith('http')){
+            throw new Error("web3 provider uri must start with http if using subcribe:false ")
+        }
+
         this.rpcProvider = new ethers.providers.JsonRpcProvider( indexingConfig.web3ProviderUri );
        }
        
