@@ -1,10 +1,9 @@
-# VibeGraph 🐸
+# Vibegraph 
 Ethereum event indexing collection service for Web3 events such as Transfer/Approval events of ERC20 and ERC721 tokens.  An opensource and lightweight alternative to Subgraph/TheGraph.
 
+ 
 
-![image](https://user-images.githubusercontent.com/6249263/218893132-89721ace-a86a-4d57-8924-773eedf4fa52.png)
-
-!VIBE 
+!VIBE 🐸
 
 #### Try it out 
 
@@ -17,21 +16,20 @@ Ethereum event indexing collection service for Web3 events such as Transfer/Appr
 
 #### Pre-requisites
  - NodeJS >= 14
- - MongoDB
+ - MongoDB (for storing persistent contract state indexing data)
 
-#### How to use (In NodeJS) 
+#### How to Use (TypeScript) 
 
 
-    //top of file 
+  
     let VibeGraph = require('vibegraph')
     let ERC721ABI = require( '../config/ERC721ABI.json' )
-
-    //define the config 
+ 
     let vibegraphConfig = {
         contracts:[{address:"0x39ec448b891c476e166b3c3242a90830db556661", startBlock: 4465713, type:'ERC721'},
                         {address:"0x7cea7e61f8be415bee361799f19644b9889713cd", startBlock: 4528636, type:'ERC721'}],
             
-        dbName:"vibegraph__dev",
+        dbName:"vibegraph_development",
         indexRate: 10*1000,
         courseBlockGap: 8000,
         logging:true,
@@ -75,15 +73,14 @@ Ethereum event indexing collection service for Web3 events such as Transfer/Appr
  
  Once vibegraph synchronizes to the front of the blockchain data (current state) then it will use the 'fineBlockGap' to remain synchronized.  
  
- As vibegraph is scraping chaindata for each ERC20/ERC721 token, it is also building a cache of user balances in the tables named 'erc20_balances' and 'erc721_balances'. 
+ As vibegraph is scraping chaindata for each contract, it triggers onEventEmitted(evt) in the corresponding Indexer for each event.  
  
  
- ### Examples (see it in action!)
+ ### Examples 
  
- Here is an open source project that uses Vibegraph to scrape ERC20 events. Use this as a reference implementation!
+ Here is an open source project that uses Vibegraph to scrape ENS Domain events. Use this as a reference implementation!
  
- https://github.com/OpenSourceMfers/open-0xbtc-api/blob/master/server/lib/dataghost.ts
- 
+https://github.com/ethereumdegen/ens-domain-indexer
  
  
  
@@ -104,23 +101,18 @@ Ethereum event indexing collection service for Web3 events such as Transfer/Appr
  "subscribe":  A boolen to turn on chain data scraping with a subscription to the web3 connection.  With this set to 'true', data is still also scraped using the indexRate and any duplicate events are simply ignored. You MUST use a websockets-based connection (wss://) and not an http:// based connection for the web3 RPC if you choose to enable this.  
  
  "customIndexers":  An array of objects, each with 'type', 'abi', and 'handler'.  If one of your contracts has a 'type' that is not one of the default types ('ERC20' or 'ERC721') then you must declare the custom type here.  In this way, you attach the ABI object (parsed json file) and the handler (a javascript class describing how to store the event data in mongodb.)  There are example handler files to start from. 
- 
- #### Default Indexers and Events Supported
- 
-        ERC20 Events:  Transfer, Approval, Deposit (weth), Withdrawal (weth), Mint (0xBTC)
- 
-        ERC721 Events: Transfer
-        
-        ERC1155 Events: Transfer
+  
 
 
 #### Custom Indexers
 
 Specify a custom indexer in the vibegraph config like so:
 
-    customIndexers:[{ type:'TellerOptions', abi: TellerOptionsABI ,  handler: IndexerTellerOptions  }]
+    customIndexers:[{type:'EnsRegistry', 
+                abi: EnsRegistryABI ,  
+                handler: indexerENSRegistry}]
 
-Where 'IndexerTellerOptions' is an imported Class similar to ./indexers/IndexerCryptopunks.js, TellerOptionsABI is a parsed JSON object and the type string is the identifier.  
+Where 'indexerENSRegistry' is an imported Class that implements 'VibegraphIndexer' as a base class. 
 
 An indexer javascript file must must export an 'async' method named 'onEventEmitted' which accepts one argument: event.  Extend the interface 'Vibegraph Indexer'.  Vibegraph will call onEventEmitted(event)  whenever it recieves new data from the web3 connection.  You can handle this data in any way that you want. As you can see in example indexers, typically, you will parse the event object and then interpret that data to update or insert data into a database.
 
@@ -136,7 +128,3 @@ Vibegraph will automatically create a series of collections inside of the mongo 
 "event_data":  used to store raw data of incoming web3 requests 
 
  
-
-## How you can contribute to this repo
-
-- add more unit tests

@@ -9,6 +9,9 @@ import mongoose from 'mongoose'
 
 import {getBlockNumber, getCustomContract} from './lib/web3-helper'
 
+
+import { saveErrorToDatabase } from './lib/error-lib'
+
 //const MongoInterface = require('./lib/mongo-interface')
 //const Web3Helper = require('./lib/web3-helper')
 
@@ -567,8 +570,19 @@ export default class VibeGraph {
             await EventList.updateOne( {_id: event._id }, {hasAffectedLedger: true } )
 
             }catch(e:any){
+
                 console.log('error updating ledger', e)
+
                 await EventList.updateOne( {_id: event._id }, {errorAffectingLedger: true } )
+
+                const errorMessage = e.toString()
+                const errorMetadata = JSON.stringify( {
+                    _id: event._id,
+                    name: event.name,
+                    args: event.args
+                } )
+
+                await saveErrorToDatabase(errorMessage,errorMetadata)
             }
        
         }
@@ -1047,6 +1061,7 @@ export default class VibeGraph {
  
         //@ts-ignore
         let result = await indexer.onEventEmitted(event)
+
         return result 
     
         
