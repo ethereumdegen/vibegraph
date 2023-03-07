@@ -10,7 +10,7 @@ Ethereum event indexing collection service for Web3 events such as Transfer/Appr
 
     npm install
 
-    npm run vibegraph 
+    npm run demo 
 
 
 

@@ -12,7 +12,7 @@
     "build": "yarn tsc",
     "test": "NODE_ENV=TEST ts-mocha -p tsconfig.testing.json 'test/**/*.spec.ts' --timeout 10000",
     "publish": "yarn npm publish --access public",
-    "start": "yarn ts-node tasks/start.ts",
+    "demo": "yarn ts-node tasks/demo.ts",
     "resolve": "yarn ts-node tasks/resolve.ts",
     "resolveReverse": "yarn ts-node tasks/resolveReverse.ts",
     "deleteIndexedData": "node tasks/deleteIndexedData.js"
