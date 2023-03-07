@@ -2,7 +2,7 @@
  
 import Vibegraph, { VibegraphConfig } from '../src/index'
 
-let web3Config = require('../tests/testconfig.json')
+let web3Config = require('../test/testconfig.json')
 
 let IndexerENSRegistry = require( '../indexers/IndexerENSRegistry' )
 let IndexerENSRegistrarController = require( '../indexers/IndexerENSRegistrarController' )
