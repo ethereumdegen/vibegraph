@@ -1024,6 +1024,7 @@ export default class VibeGraph {
                        address:evt.address,
                        data: evt.data,
                        transactionHash: evt.transactionHash, 
+                       transactionIndex: evt.transactionIndex,
                        blockNumber: evt.blockNumber,
                        blockHash: evt.blockHash ,
                        logIndex: evt.logIndex
