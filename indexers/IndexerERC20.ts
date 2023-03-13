@@ -25,7 +25,7 @@ module.exports =  class IndexerERC20 extends VibegraphIndexer  {
 
       
 
-       let outputs = event.args
+       let outputs:any = event.args
 
        let contractAddress = ethers.utils.getAddress(event.address )
        if(!eventName){
@@ -40,7 +40,7 @@ module.exports =  class IndexerERC20 extends VibegraphIndexer  {
 
            let from = ethers.utils.getAddress( outputs['0'] )
            let to = ethers.utils.getAddress( outputs['1'] )
-           let amount = parseInt(outputs['2']) 
+           let amount = parseInt(BigNumber.from(outputs['2']).toString()) 
 
 
 
@@ -58,15 +58,15 @@ module.exports =  class IndexerERC20 extends VibegraphIndexer  {
 
            let from = ethers.utils.getAddress(outputs['0'] )
            let to = ethers.utils.getAddress(outputs['1'] )
-           let amount = parseInt(outputs['2']) 
+           let amount = parseInt(BigNumber.from(outputs['2']).toString()) 
 
            await IndexerERC20.setERC20LedgerApproval(   contractAddress , from, to,  amount   ) 
 
        }
        else if(eventName == 'mint'){
 
-           let to = ethers.utils.getAddress(outputs['0'] ) 
-           let amount = parseInt(outputs['1']) 
+           let to = ethers.utils.getAddress(outputs['0'] )  
+           let amount = parseInt(BigNumber.from(outputs['1']).toString()) 
 
            await IndexerERC20.modifyERC20LedgerBalance(   to ,contractAddress , amount   )  
 
@@ -74,7 +74,7 @@ module.exports =  class IndexerERC20 extends VibegraphIndexer  {
        else if(eventName == 'deposit'){
 
            let to = ethers.utils.getAddress(outputs['0'] ) 
-           let amount = parseInt(outputs['1']) 
+           let amount = parseInt(BigNumber.from(outputs['1']).toString()) 
 
            await IndexerERC20.modifyERC20LedgerBalance(   to ,contractAddress , amount  )  
 
@@ -83,7 +83,7 @@ module.exports =  class IndexerERC20 extends VibegraphIndexer  {
        else if(eventName == 'withdrawal'){
 
            let from = ethers.utils.getAddress(outputs['0'] ) 
-           let amount = parseInt(outputs['1']) 
+           let amount = parseInt(BigNumber.from(outputs['1']).toString()) 
 
            await IndexerERC20.modifyERC20LedgerBalance(   from ,contractAddress , amount * -1  )  
 

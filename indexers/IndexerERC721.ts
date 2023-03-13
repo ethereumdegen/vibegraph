@@ -36,7 +36,7 @@ module.exports = class IndexerERC721 extends VibegraphIndexer{
         eventName = eventName.toLowerCase()
         
 
-        let outputs = event.args
+        let outputs:any = event.args
  
         let contractAddress = ethers.utils.getAddress(event.address)
        
@@ -44,7 +44,9 @@ module.exports = class IndexerERC721 extends VibegraphIndexer{
         if(eventName == 'transfer' ){
             let from = ethers.utils.getAddress(outputs['0'] )
             let to = ethers.utils.getAddress(outputs['1'] )
-            let tokenId = parseInt(outputs['2']) 
+            let tokenId = parseInt(BigNumber.from(outputs['2']  ).toString()) 
+
+          
 
             await IndexerERC721.recordTransfer( from, to ,contractAddress , tokenId ,blockNumber, transactionIndex  ) 
             
@@ -55,14 +57,12 @@ module.exports = class IndexerERC721 extends VibegraphIndexer{
         }
 
         if(eventName == 'transfersingle' ){
-          /*  let from = ethers.utils.getAddress(outputs._from )
-            let to = ethers.utils.getAddress(outputs._to )
-            let tokenId = parseInt(outputs._id)*/
+       
 
 
             let from = ethers.utils.getAddress(outputs['0'] )
             let to = ethers.utils.getAddress(outputs['1'] )
-            let tokenId = parseInt(outputs['2']) 
+            let tokenId = parseInt(BigNumber.from(outputs['2']  ).toString()) 
 
 
             await IndexerERC721.recordTransfer( from, to ,contractAddress , tokenId ,blockNumber, transactionIndex   ) 
@@ -129,7 +129,7 @@ module.exports = class IndexerERC721 extends VibegraphIndexer{
      
     }
  
-    static async recordTransfer( from:string, to:string ,contractAddress:string , tokenId :number, blockNumber:number, transactionIndex:string ){
+    static async recordTransfer( from:string, to:string ,contractAddress:string , tokenId :number, blockNumber:number, transactionIndex:number ){
        // tokenId = parseInt(tokenId) 
          
         await ERC721Transfer.create(  {from:from, to:to, tokenId: tokenId, contractAddress: contractAddress,   blockNumber: blockNumber, transactionIndex: transactionIndex, createdAt: Date.now()  }   )
