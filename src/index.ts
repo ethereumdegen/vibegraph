@@ -127,6 +127,7 @@ export interface ContractEvent{
     blockHash:string
 
     logIndex:number
+    transactionIndex:number
 
 }
 export default class VibeGraph {
@@ -485,7 +486,8 @@ export default class VibeGraph {
                     transactionHash: rawEvent.transactionHash, 
                     blockNumber: rawEvent.blockNumber ,
                     blockHash: rawEvent.blockHash ,
-                    logIndex: rawEvent.logIndex
+                    logIndex: rawEvent.logIndex ,
+                    transactionIndex: rawEvent.transactionIndex
                      
                  }
             }catch(error:any){

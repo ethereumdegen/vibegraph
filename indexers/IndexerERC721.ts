@@ -1,25 +1,29 @@
 
-import VibegraphIndexer from './VibegraphIndexer'
+ 
 import { ethers, BigNumber } from 'ethers'
 
+import VibegraphIndexer from 'vibegraph/dist/indexers/VibegraphIndexer'
+import { ContractEvent } from 'vibegraph'
+import { ERC721Balance } from '../models/ERC721_balance'
+import { ERC721Token } from '../models/ERC721_token'
+import { ERC721Transfer } from '../models/ERC721_transfer'
 
 module.exports = class IndexerERC721 extends VibegraphIndexer{
  
      
 
-    async onEventEmitted(event){
+    async onEventEmitted(event:ContractEvent){
 
-        await IndexerERC721.modifyERC721LedgerByEvent(event,this.mongoInterface)
+        await IndexerERC721.modifyERC721LedgerByEvent( event )
 
     }
- 
- 
+  
 
   
-    static async modifyERC721LedgerByEvent(event,mongoInterface){
+    static async modifyERC721LedgerByEvent(event:ContractEvent){
         
          
-        let eventName = event.event 
+        let eventName = event.name 
 
         let blockNumber = event.blockNumber
         let transactionHash = event.transactionHash
@@ -32,7 +36,7 @@ module.exports = class IndexerERC721 extends VibegraphIndexer{
         eventName = eventName.toLowerCase()
         
 
-        let outputs = event.returnValues
+        let outputs = event.args
  
         let contractAddress = ethers.utils.getAddress(event.address)
        
@@ -40,35 +44,41 @@ module.exports = class IndexerERC721 extends VibegraphIndexer{
         if(eventName == 'transfer' ){
             let from = ethers.utils.getAddress(outputs['0'] )
             let to = ethers.utils.getAddress(outputs['1'] )
-            let tokenId = parseInt(outputs['2'])    
+            let tokenId = parseInt(outputs['2']) 
 
-            await IndexerERC721.recordTransfer( from, to ,contractAddress , tokenId ,blockNumber, transactionIndex  ,mongoInterface) 
+            await IndexerERC721.recordTransfer( from, to ,contractAddress , tokenId ,blockNumber, transactionIndex  ) 
             
-            await IndexerERC721.setOwnerOfERC721Token( to ,contractAddress , tokenId  ,mongoInterface) 
+            await IndexerERC721.setOwnerOfERC721Token( to ,contractAddress , tokenId   ) 
              
-            await IndexerERC721.removeERC721TokenFromAccount( from ,contractAddress , tokenId  ,mongoInterface )
-            await IndexerERC721.addERC721TokenToAccount( to ,contractAddress , tokenId  ,mongoInterface) 
+            await IndexerERC721.removeERC721TokenFromAccount( from ,contractAddress , tokenId   )
+            await IndexerERC721.addERC721TokenToAccount( to ,contractAddress , tokenId   ) 
         }
 
         if(eventName == 'transfersingle' ){
-            let from = ethers.utils.getAddress(outputs._from )
+          /*  let from = ethers.utils.getAddress(outputs._from )
             let to = ethers.utils.getAddress(outputs._to )
-            let tokenId = parseInt(outputs._id)
+            let tokenId = parseInt(outputs._id)*/
 
-            await IndexerERC721.recordTransfer( from, to ,contractAddress , tokenId ,blockNumber, transactionIndex  ,mongoInterface) 
+
+            let from = ethers.utils.getAddress(outputs['0'] )
+            let to = ethers.utils.getAddress(outputs['1'] )
+            let tokenId = parseInt(outputs['2']) 
+
+
+            await IndexerERC721.recordTransfer( from, to ,contractAddress , tokenId ,blockNumber, transactionIndex   ) 
               
-            await IndexerERC721.setOwnerOfERC721Token( to ,contractAddress , tokenId  ,mongoInterface) 
+            await IndexerERC721.setOwnerOfERC721Token( to ,contractAddress , tokenId  ) 
             
-            await IndexerERC721.removeERC721TokenFromAccount( from ,contractAddress , tokenId  ,mongoInterface )
-            await IndexerERC721.addERC721TokenToAccount( to ,contractAddress , tokenId  ,mongoInterface ) 
+            await IndexerERC721.removeERC721TokenFromAccount( from ,contractAddress , tokenId   )
+            await IndexerERC721.addERC721TokenToAccount( to ,contractAddress , tokenId   ) 
         }
        
     }
 
-    static async removeERC721TokenFromAccount( accountAddress ,contractAddress , tokenId ,mongoInterface ){
-        tokenId = parseInt(tokenId)
+    static async removeERC721TokenFromAccount( accountAddress:string ,contractAddress:string , tokenId:number   ){
+     //   tokenId = parseInt(tokenId)
 
-        let existingAccount = await mongoInterface.findOne('erc721_balances', {accountAddress: accountAddress, contractAddress: contractAddress }  )
+        let existingAccount = await ERC721Balance.findOne(  {accountAddress: accountAddress, contractAddress: contractAddress }  )
 
         if(existingAccount){
             let tokenIdsArray = existingAccount.tokenIds
@@ -78,16 +88,16 @@ module.exports = class IndexerERC721 extends VibegraphIndexer{
                 tokenIdsArray.splice(index, 1);
             }
 
-            await mongoInterface.updateOne('erc721_balances', {accountAddress: accountAddress, contractAddress: contractAddress}, {tokenIds: tokenIdsArray, lastUpdatedAt: Date.now() } )
+            await ERC721Balance.updateOne( {accountAddress: accountAddress, contractAddress: contractAddress}, {tokenIds: tokenIdsArray, lastUpdatedAt: Date.now() } )
         }else{
-            await mongoInterface.insertOne('erc721_balances', {accountAddress: accountAddress, contractAddress: contractAddress, tokenIds: [] , lastUpdatedAt: Date.now() }   )
+            await ERC721Balance.create( {accountAddress: accountAddress, contractAddress: contractAddress, tokenIds: [] , lastUpdatedAt: Date.now() }   )
         }
     }
 
-    static async addERC721TokenToAccount( accountAddress ,contractAddress , tokenId  ,mongoInterface){
-        tokenId = parseInt(tokenId)
+    static async addERC721TokenToAccount( accountAddress:string ,contractAddress:string , tokenId:number  ){
+       // tokenId = parseInt(tokenId)
         
-        let existingAccount = await mongoInterface.findOne('erc721_balances', {accountAddress: accountAddress, contractAddress: contractAddress }  )
+        let existingAccount = await ERC721Balance.findOne(  {accountAddress: accountAddress, contractAddress: contractAddress }  )
 
         if(existingAccount){
             let tokenIdsArray = existingAccount.tokenIds
@@ -96,48 +106,33 @@ module.exports = class IndexerERC721 extends VibegraphIndexer{
                 tokenIdsArray.push(tokenId)
             }  
 
-            await mongoInterface.updateOne('erc721_balances', {accountAddress: accountAddress, contractAddress: contractAddress}, {tokenIds: tokenIdsArray , lastUpdatedAt: Date.now()  } )
+            await ERC721Balance.updateOne(  {accountAddress: accountAddress, contractAddress: contractAddress}, {tokenIds: tokenIdsArray , lastUpdatedAt: Date.now()  } )
         }else{
-            await mongoInterface.insertOne('erc721_balances', {accountAddress: accountAddress, contractAddress: contractAddress, tokenIds: [tokenId] , lastUpdatedAt: Date.now()  }   )
+            await ERC721Balance.create(  {accountAddress: accountAddress, contractAddress: contractAddress, tokenIds: [tokenId] , lastUpdatedAt: Date.now()  }   )
         }
     }
 
 
 
-    static async setOwnerOfERC721Token( accountAddress ,contractAddress , tokenId  ,mongoInterface){
-        tokenId = parseInt(tokenId)
+    static async setOwnerOfERC721Token( accountAddress:string ,contractAddress:string , tokenId:number ){
+        //tokenId = parseInt(tokenId)
        
-        let existingEntry = await mongoInterface.findOne('erc721_token', {tokenId: tokenId, contractAddress: contractAddress }  )
+        let existingEntry = await ERC721Token.findOne( {tokenId: tokenId, contractAddress: contractAddress }  )
 
         if(existingEntry){ 
-            await mongoInterface.updateOne('erc721_token', {tokenId: tokenId, contractAddress: contractAddress}, {accountAddress: accountAddress , lastUpdatedAt: Date.now()  } )
+            await ERC721Token.updateOne(  {tokenId: tokenId, contractAddress: contractAddress}, {accountAddress: accountAddress , lastUpdatedAt: Date.now()  } )
         }else{
-            await mongoInterface.insertOne('erc721_token', {tokenId: tokenId, contractAddress: contractAddress, accountAddress: accountAddress , lastUpdatedAt: Date.now()  }   )
+            await ERC721Token.create( {tokenId: tokenId, contractAddress: contractAddress, accountAddress: accountAddress , lastUpdatedAt: Date.now()  }   )
         }
        
         
      
     }
-
-    static async setOwnerOfERC721Token( accountAddress ,contractAddress , tokenId  ,mongoInterface){
-        tokenId = parseInt(tokenId)
-       
-        let existingEntry = await mongoInterface.findOne('erc721_token', {tokenId: tokenId, contractAddress: contractAddress }  )
-
-        if(existingEntry){ 
-            await mongoInterface.updateOne('erc721_token', {tokenId: tokenId, contractAddress: contractAddress}, {accountAddress: accountAddress , lastUpdatedAt: Date.now()  } )
-        }else{
-            await mongoInterface.insertOne('erc721_token', {tokenId: tokenId, contractAddress: contractAddress, accountAddress: accountAddress , lastUpdatedAt: Date.now()  }   )
-        }
-       
-        
-     
-    }
-
-    static async recordTransfer( from, to ,contractAddress , tokenId , blockNumber, transactionIndex ,mongoInterface){
-        tokenId = parseInt(tokenId) 
+ 
+    static async recordTransfer( from:string, to:string ,contractAddress:string , tokenId :number, blockNumber:number, transactionIndex:string ){
+       // tokenId = parseInt(tokenId) 
          
-        await mongoInterface.insertOne('erc721_transfer', {from:from, to:to, tokenId: tokenId, contractAddress: contractAddress,   blockNumber: blockNumber, transactionIndex: transactionIndex, createdAt: Date.now()  }   )
+        await ERC721Transfer.create(  {from:from, to:to, tokenId: tokenId, contractAddress: contractAddress,   blockNumber: blockNumber, transactionIndex: transactionIndex, createdAt: Date.now()  }   )
            
     }
 
