@@ -160,6 +160,9 @@ export default class VibeGraph {
 
     logLevel?:string = 'debug'
 
+    busyIndexing: boolean = false
+    busyUpdatingLedger: boolean = false 
+
 
 
  /*
@@ -544,7 +547,11 @@ export default class VibeGraph {
 
     async updateLedger(customPageLimit?:number){
 
-        
+        if(this.busyUpdatingLedger){
+            console.log("Busy updating ledger. Cannot update ledger.")
+            return
+        }
+        this.busyUpdatingLedger = true;
 
         if(typeof this.ledgerContractIndex == 'undefined'){
             this.ledgerContractIndex = 0
@@ -609,6 +616,8 @@ export default class VibeGraph {
         } 
 
         //setTimeout( this.updateLedger.bind(this)  , 1000 );
+
+        this.busyUpdatingLedger = false;
 
         return true 
     }
@@ -713,6 +722,12 @@ export default class VibeGraph {
     }
 
     async indexData(){    
+
+        if(this.busyIndexing){
+            console.log("Vibegraph is busy indexing. Cannot index data at this time.")
+            return  
+        }
+        this.busyIndexing = true;
         
         if(!this.maxBlockNumber || this.blockNumberIsStale()){
             this.maxBlockNumber = await this.fetchLatestBlockNumber( )
@@ -801,7 +816,7 @@ export default class VibeGraph {
 
         }
         this.incrementContractsCount(  )
-
+        this.busyIndexing = false;
 
         return {
             madeApiRequest,
@@ -870,12 +885,13 @@ export default class VibeGraph {
     }
 
 
+    /*
+            Consider running this in another thread or process somehow 
+    */
 
     async indexContractData(  contractAddress:string, contractABI:ethers.utils.Interface, rpcProvider: ethers.providers.Provider, startBlock:number, blockGap:number ){
 
-
-
-      //  let contract = getCustomContract( contractAddress, contractABI, rpcProvider  )
+ 
         
         var insertedMany; 
           
