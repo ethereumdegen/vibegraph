@@ -94,8 +94,8 @@ export interface ContractConfig {
 }
 
 export interface CustomIndexer {
-    abi: ethers.ContractInterface,
-    handler: typeof VibegraphIndexer, 
+    abi: ethers.ContractInterface
+    handler: any // typeof VibegraphIndexer, 
     type:string 
 }
 
