@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "build": "yarn tsc",
-    "test": "NODE_ENV=TEST ts-mocha -p tsconfig.testing.json 'test/**/*.spec.ts' --timeout 10000",
+    "test": "NODE_ENV=test ts-mocha -p tsconfig.testing.json 'test/**/*.spec.ts' --timeout 10000",
     "publish": "yarn npm publish --access public",
     "demo": "yarn ts-node tasks/demo.ts",
     "resolve": "yarn ts-node tasks/resolve.ts",
@@ -28,6 +28,7 @@
   "license": "MIT",
   "dependencies": {
     "@ensdomains/eth-ens-namehash": "^2.0.15",
+    "dotenv": "^16.0.3",
     "ethers": "^5.7.1",
     "mongodb": "^3.6.5",
     "mongoose": "^6.9.1"

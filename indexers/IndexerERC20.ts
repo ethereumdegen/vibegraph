@@ -2,11 +2,13 @@
 
 import { ethers, BigNumber } from 'ethers'
 
-import VibegraphIndexer from 'vibegraph/dist/indexers/VibegraphIndexer'
+import VibegraphIndexer from './VibegraphIndexer'
 import { ContractEvent } from 'vibegraph'
 import { ERC20Balance } from '../models/ERC20_balance'
 import { ERC20Approval } from '../models/ERC20_approval'
 import { ERC20Transfer } from '../models/ERC20_transfer'
+
+
 module.exports =  class IndexerERC20 extends VibegraphIndexer  {
 
    

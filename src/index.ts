@@ -194,7 +194,7 @@ export default class VibeGraph {
 
         mongoose.pluralize(null);
         mongoose.set('strictQuery', true);
-        const mongooseConnection = await mongoose.connect(`mongodb://${mongoConnectURI}/${dbName}`);
+        const mongooseConnection = await mongoose.connect(`mongodb://${mongoConnectURI}/default`);
         //this.mongoInterface = new MongoInterface( ) 
         //await this.mongoInterface.init( dbName , mongoConnectURI )
 

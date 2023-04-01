@@ -1,5 +1,9 @@
 import mongoose, { Schema, Model, InferSchemaType, model, Require_id } from 'mongoose'
  
+import {getDatabaseName} from "../src/lib/app-helper"
+
+
+const dbName = getDatabaseName()
 
 export const ContractStateSchema = new Schema(
   {
@@ -17,7 +21,9 @@ export const ContractStateSchema = new Schema(
 
 mongoose.pluralize(null);
 
+let dbConnection = mongoose.connection.useDb(dbName)
+
 export type IContractState = Require_id<
   InferSchemaType<typeof ContractStateSchema>
 > 
-export const ContractState = model<IContractState, Model<IContractState>>('contract_state', ContractStateSchema)
+export const ContractState = dbConnection.model<IContractState, Model<IContractState>>('contract_state', ContractStateSchema)

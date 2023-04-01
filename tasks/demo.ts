@@ -49,7 +49,7 @@ let EnsPublicResolverABI = require( '../config/contracts/ENSPublicResolver.json'
             updateBlockNumberRate: 60*1000,
             fineBlockGap: 20,
             logLevel:'debug',
-            subscribe: true, 
+            subscribe: false, 
             customIndexers:[{
                 type:'EnsRegistry', 
                 abi: EnsRegistryABI ,  

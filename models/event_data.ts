@@ -1,8 +1,11 @@
 import mongoose, { Schema, Model, InferSchemaType, model, Require_id } from 'mongoose'
  
-/*
-what is this used for ? 
-*/
+
+import {getDatabaseName} from "../src/lib/app-helper"
+
+
+const dbName = getDatabaseName()
+
 export const EventDataSchema = new Schema(
   {
     contractAddress:String,
@@ -15,7 +18,12 @@ export const EventDataSchema = new Schema(
   
 mongoose.pluralize(null);
 
+
+let dbConnection = mongoose.connection.useDb(dbName)
+
+
+
 export type IEventData = Require_id<
   InferSchemaType<typeof EventDataSchema>
 > 
-export const EventData = model<IEventData, Model<IEventData>>('event_data', EventDataSchema)
+export const EventData = dbConnection.model<IEventData, Model<IEventData>>('event_data', EventDataSchema)
