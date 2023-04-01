@@ -563,6 +563,7 @@ export default class VibeGraph {
         let matchingContract = await this.getContractState(contractAddress)
 
         if(!matchingContract){
+            this.busyUpdatingLedger = false;
             throw new Error(`Could not find contract state for ${contractAddress}`)
         }
 
@@ -737,6 +738,7 @@ export default class VibeGraph {
         }
 
         if(!this.maxBlockNumber){
+            this.busyIndexing = false;
             throw new Error("No max block number! cannot index data")
         }
         
@@ -750,6 +752,7 @@ export default class VibeGraph {
         let matchingContract = await this.getContractState(contractAddress)
 
         if(!matchingContract){
+            this.busyIndexing = false;
             throw new Error(`Could not find contract state for ${contractAddress}`)
         }
 
@@ -773,6 +776,7 @@ export default class VibeGraph {
             let rpcProvider = this.rpcProvider 
 
             if(!rpcProvider){
+                this.busyIndexing = false;
                 throw new Error("rpcProvider is undefined")
             }
 
@@ -793,7 +797,10 @@ export default class VibeGraph {
             let contractABI = this.getABIFromType(contractType) 
             let rpcProvider = this.rpcProvider 
 
-            if(!rpcProvider) throw new Error("Undefined rpc provider")
+            if(!rpcProvider) {
+                this.busyIndexing = false;
+                throw new Error("Undefined rpc provider")
+            }
 
             await this.indexContractData( contractAddress, contractABI, rpcProvider, cIndexingBlock, remainingBlockGap  )
 
