@@ -728,7 +728,24 @@ export default class VibeGraph {
             console.log("Vibegraph is busy indexing. Cannot index data at this time.")
             return  
         }
+        
+
+
+        var madeApiRequest = false;
+        let cIndexingBlock;
+
+
+        let contractData = this.contractsArray[this.currentContractIndex]
+        let contractAddress = contractData.address
+        
+
         this.busyIndexing = true;
+
+
+        try{
+
+
+
         
         if(!this.maxBlockNumber || this.blockNumberIsStale()){
             this.maxBlockNumber = await this.fetchLatestBlockNumber( )
@@ -743,11 +760,7 @@ export default class VibeGraph {
         }
         
 
-        let contractData = this.contractsArray[this.currentContractIndex]
-        let contractAddress = contractData.address
-        
 
-        var madeApiRequest = false;
 
         let matchingContract = await this.getContractState(contractAddress)
 
@@ -756,7 +769,7 @@ export default class VibeGraph {
             throw new Error(`Could not find contract state for ${contractAddress}`)
         }
 
-        let cIndexingBlock = matchingContract.currentIndexingBlock // await this.readParameterForContract(contractAddress , 'currentIndexingBlock')   //parseInt(this.currentIndexingBlock) 
+        cIndexingBlock = matchingContract.currentIndexingBlock // await this.readParameterForContract(contractAddress , 'currentIndexingBlock')   //parseInt(this.currentIndexingBlock) 
 
         let contractType = contractData.type //await this.readParameterForContract(contractAddress , 'type')   //parseInt(this.currentIndexingBlock) 
 
@@ -822,7 +835,19 @@ export default class VibeGraph {
             madeApiRequest = false;
 
         }
-        this.incrementContractsCount(  )
+
+
+        //only do this if all is successful
+        this.incrementContractsCount()
+
+
+       }catch(error){
+
+         console.error(error)
+
+       }finally{
+
+        //do this no matter what so we don't get stuck
         this.busyIndexing = false;
 
         return {
@@ -831,6 +856,9 @@ export default class VibeGraph {
             contractAddress
 
         }
+
+       }
+     
 
     }
 
